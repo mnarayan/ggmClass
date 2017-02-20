@@ -19,7 +19,7 @@ S = inv(Sinv);
 D = mvnrnd(zeros(1,n), S, N);
 
 %% Solve problem
-Sighat = cov(D);
+Sighat = corr(D);
 output = admm.admm_solver(Sighat);
 X = output.Theta;
 history = output.history; 

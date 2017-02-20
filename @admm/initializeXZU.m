@@ -3,6 +3,8 @@ function options = initializeXZU(Sigma,options)
 	narginchk(2,2) 
 	
 	p = length(Sigma); 
+	D = diag(Sigma);
+	D(D==0) = 1;
 	
 	% Initialization of X,Z,U
 	if(options.pathwise)
@@ -16,9 +18,10 @@ function options = initializeXZU(Sigma,options)
 		end
 		% options.X = eye(p,p)
 	else
-		options.X = eye(p,p); 
+		options.X = diag(1./D);
+		% options.X = eye(p,p); 
 	end		
-	options.Z = zeros(p,p); 
+	options.Z = options.X;
 	options.U = zeros(p,p);
 
 end

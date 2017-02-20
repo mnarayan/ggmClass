@@ -14,7 +14,7 @@ function options = admm_options(varargin)
 	options.alpha		= .5; 	
 	
 	% Function handles
-	options.objective = @(Sigma,Theta,Z,lambda)(objective(Sigma,Theta,Z,lambda)); 
+	options.objective = @(Sigma,Theta,Z,lambda)(admm.objective(Sigma,Theta,Z,lambda)); 
 	options.shrinkage = @(a,kappa)(shrinkage(a,kappa)); 
 	
 	% Mode 
@@ -22,17 +22,6 @@ function options = admm_options(varargin)
 	
 end
 
-
-
-function loss = objective(Sigma, Theta, Z, Lambda)	
-	Res = Z.*Lambda;
-	Res = setdiagLS(Res,0); 
-	if(exist('logdetLS'))
-   		loss = trace(Sigma*Theta) - logdetLS(Theta) + norm(Res(:), 1);		
-	else
-   		loss = trace(Sigma*Theta) - log(det(Theta)) + norm(Res(:), 1);
- 	end
-end
 
 function y = shrinkage(a, kappa)
 	if(ismatrix(a))
