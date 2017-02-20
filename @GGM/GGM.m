@@ -194,4 +194,10 @@ classdef GGM < handle
 	
 	end
 	
+	methods(Static)
+	
+		W = adaptiveWeights(Theta,varargin); 
+	
+	end
+	
 end
