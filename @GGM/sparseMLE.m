@@ -29,17 +29,18 @@ function [self results] = sparseMLE(self,varargin)
 		end
 		
 		[Thetahat0 SigmaHat2] = QUIC('default',SigmaHat, Lambda, 1e-6, 0, 1000);
-
-		% Relaxed/Refitted MLE
-		L_w = zeros(p,p);
-		L_w = 1./abs(Thetahat0); L_w = L_w/trace(L_w);
-		L_w(Thetahat0==0) = 1000; L_w(find(eye(p))) = 0;
-
-		[Thetahat1 SigmaHat2] = QUIC('default', SigmaHat, Lambda*L_w, 1e-6, 0, 1000);
-
 		self.Theta = Thetahat0;
-		self.AdaptTheta = Thetahat1;
-		self.Wt = L_w;
+
+		% % Relaxed/Refitted MLE
+		% L_w = zeros(p,p);
+		% L_w = 1./abs(Thetahat0); L_w = L_w/trace(L_w);
+		% L_w(Thetahat0==0) = 1000; L_w(find(eye(p))) = 0;
+		%
+		% [Thetahat1 SigmaHat2] = QUIC('default', SigmaHat, Lambda*L_w, 1e-6, 0, 1000);
+		%
+		% self.AdaptTheta = Thetahat1;
+		% self.Wt = L_w;
+		[self.AdaptTheta = constrainMLE(SigmaHat,Thetahat0); 
 		
 		results.SigmaHat2 = SigmaHat2;
 				
@@ -88,15 +89,15 @@ function [self results] = sparseMLE(self,varargin)
 			self.Theta = [];
 		end
 	
-		% Constrained/Adaptive MLE 
-		Lrange = self.Lrange;
-		L_w = ones(p,p);
-		L_w(self.ThetaPath(:,:,20)==0) = 1000; L_w(find(eye(p))) = 0;
-		self.Wt = L_w;
-
-		[Thetahat1 SigmaHat3] = QUIC('path', SigmaHat, L_w, Lrange, 1e-6, 0, 1000);
-		self.AdaptTheta=Thetahat1;				
-		results.SigmaHat3 = SigmaHat3;
+		% % Constrained/Adaptive MLE
+		% Lrange = self.Lrange;
+		% L_w = ones(p,p);
+		% L_w(self.ThetaPath(:,:,20)==0) = 1000; L_w(find(eye(p))) = 0;
+		% self.Wt = L_w;
+		%
+		% [Thetahat1 SigmaHat3] = QUIC('path', SigmaHat, L_w, Lrange, 1e-6, 0, 1000);
+		% self.AdaptTheta=Thetahat1;
+		% results.SigmaHat3 = SigmaHat3;
 	
 	end
 	

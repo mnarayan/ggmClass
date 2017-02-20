@@ -18,6 +18,9 @@ function self = Estimate(self,varargin)
 		
 	case 'sparseMLE'
 		[self results] = self.sparseMLE();
+		
+	% case 'twostage'
+			
 	otherwise
 		disp('Not yet supported');
 	end
