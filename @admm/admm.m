@@ -8,6 +8,8 @@ classdef admm < handle
 		
 		options = initializeXZU(Sigma,varargin); 
    	  	
+		output  = objective(Sigma,Theta,Z,Lambda);
+		
 		[X,Z] = update_X(Sigma,X,Z,U,options); 	
 		
 		[Z_new,X_new] = update_Z(X,Z,U,options); 					
