@@ -107,12 +107,12 @@ function [output] = admm_solver(Sigma,varargin)
 			% Set X to previous output
 			if(ll>1)
 				X = output{ll-1}.Theta;
-				Z = zeros(n,n); 
+				Z = diag(diag(X));
 				U = zeros(n,n); 
 			end
 			
-			t_start = cputime;		
-			for k = 1:MAX_ITER    
+			t_start = cputime;			
+			for k=1:MAX_ITER
 			    % z-update with relaxation
 			    Zold = Z;
 				[Z X_hat] = admm.update_Z(X,Zold,U,options_ws);		

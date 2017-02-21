@@ -77,6 +77,7 @@ else
 		title(sprintf('Lambda = %.2f',new_output{ii}.('options').('lambda'))); 
 	end
 	
+	
 	figure('Position',[250   150   900   650]); 
 	n_cols = 5; 
 	n_rows = n_lambda/n_cols;
