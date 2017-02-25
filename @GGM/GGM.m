@@ -196,7 +196,8 @@ classdef GGM < handle
 	
 	methods(Static)
 	
-		W = adaptiveWeights(Theta,varargin); 
+		[Theta results] = constrainMLE(SigmaHat,InitialTheta,varargin);
+					[W] = adaptiveWeights(Theta,varargin); 
 	
 	end
 	
