@@ -1,5 +1,5 @@
 function test_suite = test_GGM
-	initTestSuite;
+	buildFunctionHandleTestSuite(localfunctions);
 
 end
 	
@@ -33,16 +33,18 @@ function test_GGM_chain
 	clear GGMobj;
 	GGMobj = GGM(Data,1,0);
 	GGMobj.sparseMLE();
+
 	
-	if(GGMobj.verbose)
-		gr_sparsity = squeeze(sum(sum(GGMobj.ThetaPath~=0,1),2))'; 
-		gr_sparsity(1:10)
-		gr_sparsity = squeeze(sum(sum(GGMobj.AdaptTheta~=0,1),2))';
-		gr_sparsity(1:10)
-	end
-	
-	% Check plotting of regularization path
-	GGMobj.plot();
+	% UNTESTED
+	% if(GGMobj.verbose)
+	% 	gr_sparsity = squeeze(sum(sum(GGMobj.ThetaPath~=0,1),2))';
+	% 	n_lambdas = min(25,floor(.25*numel(gr_sparsity)));
+	% 	gr_sparsity(1:n_lambdas)
+	% 	gr_sparsity = squeeze(sum(sum(GGMobj.AdaptTheta~=0,1),2))';
+	% 	gr_sparsity(1:n_lambdas)
+	% end
+	% % Check plotting of regularization path
+	% GGMobj.plot();
 	
 	% Check Model Selection
 	currstate = rng;
@@ -56,7 +58,12 @@ function test_GGM_chain
 	% Check tylerMLE
 	GGMobj = GGM(Data);
 	[GGMobj results] = GGMobj.tylerMLE();
-		
+	
+	% Check debias
+	GGMobj = GGM(Data); 
+	GGMobj.debias();
+	
+	clear n_lambda;	
 end
 
 % 	% Initialize Variables
