@@ -198,6 +198,7 @@ classdef GGM < handle
 	
 		[Theta results] = constrainMLE(SigmaHat,InitialTheta,varargin);
 					[W] = adaptiveWeights(Theta,varargin); 
+					Rho = rankCovEstimate(X,varargin); 
 	
 	end
 	
