@@ -105,7 +105,7 @@ classdef GGM < handle
 				% Lrange = logspace(log10(minL),log10(maxL),100);
 				% self.Lrange = fliplr(Lrange);
 				% Lrange = logspace(log10(maxL),log10(minL),100);
-				Lrange = linspace((maxL),(minL),100);				
+				Lrange = linspace((maxL),(minL),50);				
 				self.Lrange = (Lrange);
 			else
 				self.Lrange = [];
