@@ -12,11 +12,12 @@ function [Rho] = rankCovEstimate(X,varargin)
 	% Rho  = 2*sin(pi/6.*InitRho);
 	
 	% Use Kendall's
-	if(exist('kendalltau') & numel(X)<1e7)
+	if(exist('kendalltau') & numel(X)<1e6)
 		Rho = kendalltau(X); 
 	else
 		Rho = corr(X,'type','kendall'); 
 	end
-		
+	
+	Rho = sin((pi/2).*Rho); 	
 	
 end
