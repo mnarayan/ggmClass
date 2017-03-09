@@ -1,4 +1,4 @@
-function self = Estimate(self,varargin)
+function [self results] = estimate(self,varargin)
 	% Choose between different GGM estimators 
 	% 
 	% Implement Single Stage
@@ -12,17 +12,17 @@ function self = Estimate(self,varargin)
 	% Apply any single stage, use in SCAD/MCP LLE approximation
 	% 
 	
-	
+	results = {};
 	
 	switch func2str(self.methodfun)
 		
 	case 'sparseMLE'
-		[self results] = self.sparseMLE();
-		
+		[self results.mlecov] 		= self.MLECovEstimate()
+		[self results.sparsemle] 	= self.sparseMLE();
 	% case 'twostage'
-			
 	otherwise
 		disp('Not yet supported');
 	end
+
 	
 end
