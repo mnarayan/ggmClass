@@ -18,21 +18,28 @@ function test_GGM_chain
 	Data = mvnSim.generateNormal(1000,p,simulation.Theta);
 	
 	% Initialize
-	GGMobj = GGM(Data);
+	GGMobj = GGM(Data);	
+	results = {};
 	
 	% Check sample covariance self.Sigma
+	[GGMobj results.mlecov] = GGMobj.MLECovEstimate();
 	
 	% Check variance self.W
 	
 	% Check Theta at given lambda value
-	GGMobj.sparseMLE();
+	[GGMobj results.sparsemle] = GGMobj.sparseMLE();
+	[ThetaRefit results.constrainmle] = GGM.constrainMLE( ...
+										GGMobj.Sigma, ...
+										GGMobj.Theta, ...
+										1.0);
+	
 	% repeat
 	GGMobj.estimate();
 		
 	% Check Theta over regularization path
 	clear GGMobj;
 	GGMobj = GGM(Data,1,0);
-	GGMobj.sparseMLE();
+	[GGMobj results.sparsemle] = GGMobj.sparseMLE();
 
 	
 	% UNTESTED
@@ -52,8 +59,24 @@ function test_GGM_chain
 	GGMobj.verbose = 0;
 	[GGMobj grphs] = GGMobj.stableEstimate(currstate,@stars,10);
 	
-	% Check plotting of stability path
+	% Test complementary pairs generation
 	
+	% Test block subsampling 
+	
+	% Test block bootstrapping
+
+	% Test pure resampling mode	
+
+	% Test stars mode 
+
+	% Test randomized glasso mode	
+
+	% Test cross-validation mode (train,test) splits
+
+	% Check plotting of stability path	
+
+	% Test graph selection
+		
 		
 	% Check tylerMLE
 	GGMobj = GGM(Data);
