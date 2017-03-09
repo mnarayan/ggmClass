@@ -1,8 +1,10 @@
-function [self grphs] = stableEstimate(self,varargin)
+function [self results] = stableEstimate(self,varargin)
 	% Creates an ensemble of graph estimaties using a variety of methods
 	% Resulting ensemble/model Averaged estimate then stored self.Pi
 	% 
 	% 
+	
+	results = {};
 	
 	switch nargin
 		
@@ -30,11 +32,16 @@ function [self grphs] = stableEstimate(self,varargin)
 	
 	% random generator state;
 	rng(currstate);
-	if(m<p) % subsample
-		b = max(ceil(10*sqrt(m)), ceil(m/2));
-		submat = gensubsamples(N,m,b);
+	if(m<5*p) % subsample
+		if(m>100)
+			b = max(ceil(10*sqrt(m)), ceil(m/2));
+		else
+			b = ceil(m/2); 
+		end
+		%submat = gensubsamples(N,m,b);
+		submat = genblockresamples(N,m,min(b,60),0); 
 		
-	elseif(m>p) % bootstrap
+	elseif(m>5*p) % bootstrap
 		b = ceil(.7*m);		
 		submat = genbootstraps(N,m,b);				
 	end
@@ -46,7 +53,7 @@ function [self grphs] = stableEstimate(self,varargin)
 
 		case 'stars'					
 			assert(size(submat,1)>=2,'Atleast 2 resamples must be used')
-			assert(size(submat,2)>=floor(m/2),'Subsample size should be at least 10\sqrt(n) or m/2')
+			assert(size(submat,2)>=ceil(m/2),'Subsample size should be at least 10\sqrt(n) or m/2')
 			grphs = resample_helper(self,submat,1); 
 			%[score ] = stars(self,...
 			%				struct('n',m,'p',p,'s',1,'estMethod','QUIC','dm',X,'nlambda',100,'beta',.1),...
@@ -90,6 +97,11 @@ function [self grphs] = stableEstimate(self,varargin)
 		disp('Returning a path of graphs without model selection ... ')	
 						
 	end
+	
+	results.grphs = grphs; 
+	results.modselfun = modselfun; 
+	results.currstate = currstate; 
+	results.submat = submat;
 			
 end
 
@@ -97,68 +109,71 @@ end
 function [grphs] = resample_helper(self,submat,varargin)
 	
 	[nresamples] = size(submat,1); 
-	grphs = cell(nresamples,2); 		
+	grphs = cell(2*nresamples,1); 		
 	
 	if(nargin>=3)
 		usePairs = varargin{1}; 
 	else
 		usePairs = false;
 	end
+	if(length(unique(submat(1,:)))~=size(submat,2))
+		usePairs = false;
+	end
 
 	m = size(self.Data,1);
+
+
+	for ii=1:nresamples
+		tmpgrphs = cell(1,1);
+		if(self.Lambda==0)
+			tmpGGM = GGM(self.Data(submat(ii,:),:,:), 1, 0);
+			tmpGGM.estimate();
+			if(ii==1)
+				tmpGGM
+			end			
+			tmpgrphs{1,1} = tmpGGM.ThetaPath;
+		else
+			tmpGGM = GGM(self.Data(submat(ii,:),:,:));
+			tmpGGM.estimate();
+			if(ii==1)
+				tmpGGM
+			end
+			tmpgrphs{1,1} = tmpGGM.Theta;			
+		end
+		grphs(ii) = tmpgrphs;
+	end	
 	
 	if(usePairs)
+		cp_submat = []; 
 		for ii=1:nresamples
-			warning('Will be slow. No parfor being used')
-			tmpgrphs = cell(1,2);
-			if(self.Lambda==0)
-				tmpGGM = GGM(self.Data(submat(ii,:),:,:), 1, 0);
-				tmpGGM.estimate();
-				if(ii==1)
-					tmpGGM
-				end			
-				tmpgrphs{1,1} = tmpGGM.ThetaPath;
-				clear tmpGGM
-				cp_submat = setdiff([1:m],submat(ii,:));
-				tmpGGM = GGM(self.Data(cp_submat,:,:), 1, 0);
-				tmpGGM.estimate();
-				tmpgrphs{1,2} = tmpGGM.ThetaPath;
-			else
-				tmpGGM = GGM(self.Data(submat(ii,:),:,:));
-				tmpGGM.estimate();
-				if(ii==1)
-					tmpGGM
-				end
-				tmpgrphs{1,1} = tmpGGM.Theta;			
-				clear tmpGGM
-				cp_submat = setdiff([1:m],submat(ii,:));
-				tmpGGM = GGM(self.Data(cp_submat,:,:));
-				tmpGGM.estimate();
-				tmpgrphs{1,2} = tmpGGM.Theta;
-			end
-			grphs(ii,:) = tmpgrphs;
-		end		
-	else
-		parfor ii=1:nresamples
-			tmpgrphs = cell(1,2);
-			if(self.Lambda==0)
-				tmpGGM = GGM(self.Data(submat(ii,:),:,:), 1, 0);
-				tmpGGM.estimate();
-				if(ii==1)
-					tmpGGM
-				end			
-				tmpgrphs{1,1} = tmpGGM.ThetaPath;
-			else
-				tmpGGM = GGM(self.Data(submat(ii,:),:,:));
-				tmpGGM.estimate();
-				if(ii==1)
-					tmpGGM
-				end
-				tmpgrphs{1,1} = tmpGGM.Theta;			
-			end
-			grphs(ii,:) = tmpgrphs;
-		end	
+			cp_submat(ii,:) = setdiff([1:m],submat(ii,:));
+		end
 	end
+	
+	if(usePairs)
+		parfor ii=1:nresamples
+			tmpgrphs = cell(1,1);
+			if(self.Lambda==0)
+				tmpGGM = GGM(self.Data(cp_submat(ii,:),:,:), 1, 0);
+				tmpGGM.estimate();
+				if(ii==1)
+					tmpGGM
+				end			
+				tmpgrphs{1,1} = tmpGGM.ThetaPath;
+			else
+				tmpGGM = GGM(self.Data(cp_submat(ii,:),:,:));
+				tmpGGM.estimate();
+				if(ii==1)
+					tmpGGM
+				end
+				tmpgrphs{1,1} = tmpGGM.Theta;			
+			end
+			grphs(ii+nresamples) = tmpgrphs;
+		end		
+	end
+
+	grphs = reshape(grphs, [nresamples 2]); 
+		
 end
 
 function [submat] = genbootstraps(N,n,b)
@@ -193,20 +208,22 @@ function [submat] = genblockresamples(N,n,b,replacement)
 	% 	submat2(i,:) = [i:min(i+b2-1,n)];
 	% end	
 	%% fixed block length
-	N2 = floor(n/(b2+1));
+	N2 = floor(n/(b2));
 	submat2 = zeros([N2 b2]);
-	for i = 1:N2
-		submat2(i,:) = [max(1,(i-1)*b2+1):min(i*b2,n)];
+	for ii = 1:N2
+		submat2(ii,:) = [max(1,(ii-1)*b2+1):min(ii*b2,n)];
 	end	
-	submat = zeros([N N2*b2]);
+		
+	blklength = ceil(b/(b2-1));
+	submat = zeros([N blklength*b2]);
 	
-	blklength = floor(b/(b2+1));
 	if(replacement)
 		blockresamples = genbootstraps(N,N2,blklength);
 	else
 		blockresamples = gensubsamples(N,N2,blklength);
 	end
 	for ii = 1:N
-		submat(ii,:) = reshape(submat2(blockresamples(ii,:),:)',[1 blklength*b2])';
+		tmprs = submat2(blockresamples(ii,:),:); 
+		submat(ii,:) = sort(reshape(tmprs,[1 numel(tmprs)]));
 	end
 end

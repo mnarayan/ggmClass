@@ -15,7 +15,7 @@ function test_GGM_chain
 	% Check test paramters
 	assert(n==1,'Multiple subjects not supported');
 	
-	Data = mvnSim.generateNormal(1000,p,simulation.Theta);
+	Data = mvnSim.generateNormal(80,p,simulation.Theta);
 	
 	% Initialize
 	GGMobj = GGM(Data);	
@@ -57,11 +57,15 @@ function test_GGM_chain
 	currstate = rng;
 	GGMobj.randState = currstate;
 	GGMobj.verbose = 0;
-	[GGMobj grphs] = GGMobj.stableEstimate(currstate,@stars,10);
+	GGMobj = GGM(Data,1,0);
+	[GGMobj results.stability] = GGMobj.stableEstimate(currstate,@stars,5);
+	
 	
 	% Test complementary pairs generation
 	
 	% Test block subsampling 
+	% check for repeated subsamples 
+	assert(sum(any(pdist(results.stability.submat)==0))==0,'Repeated Subsamples');
 	
 	% Test block bootstrapping
 
