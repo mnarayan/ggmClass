@@ -71,12 +71,19 @@ function [self results] = stableEstimate(self,varargin)
 			disp('Union of Intersection Double Resampling not Implemented')
 	
 		case 'resample'					
-			assert(size(submat,1)>=10,'Atleast 10 resamples must be used')
+			assert(size(submat,1)>=2,'Atleast 2 resamples must be used')
 			assert(size(submat,2)>=floor(m/2),'Subsample size should be at least 10\sqrt(n) or m/2')
-			grphs = resample_helper(self,submat,1); 
-			tmpPi = zeros(p,p,size(grphs{1},3)); 
-			for ii=1:length(grphs)
-				tmpPi = tmpPi + (abs(grphs{ii,1}(:,:,:,1))~=0); 
+			cp_pairs = true;
+			grphs = resample_helper(self,submat,cp_pairs); 
+			tmpPi = zeros(p,p,size(grphs{1,1},3)); 
+			if(cp_pairs)
+				for ii=1:length(grphs)
+					tmpPi = tmpPi + (abs(grphs{ii,1}(:,:,:,1))~=0).*(abs(grphs{ii,2}(:,:,:,1))~=0); 
+				end
+			else
+				for ii=1:length(grphs)
+					tmpPi = tmpPi + (abs(grphs{ii,1}(:,:,:,1))~=0); 
+				end
 			end
 			self.Pi = tmpPi; 
 			
@@ -124,7 +131,7 @@ function [grphs] = resample_helper(self,submat,varargin)
 
 
 	for ii=1:nresamples
-		tmpgrphs = cell(1,1);
+		tmpgrphs = cell(1,1);		
 		if(self.Lambda==0)
 			tmpGGM = GGM(self.Data(submat(ii,:),:,:), 1, 0);
 			tmpGGM.verbose = self.verbose; 
@@ -132,7 +139,7 @@ function [grphs] = resample_helper(self,submat,varargin)
 			if(ii==1)
 				tmpGGM
 			end			
-			tmpgrphs{1,1} = tmpGGM.ThetaPath;
+			tmpgrphs(1) = {tmpGGM.ThetaPath};
 		else
 			tmpGGM = GGM(self.Data(submat(ii,:),:,:),1,self.Lambda);
 			tmpGGM.verbose = self.verbose; 			
@@ -140,9 +147,9 @@ function [grphs] = resample_helper(self,submat,varargin)
 			if(ii==1)
 				tmpGGM
 			end
-			tmpgrphs{1,1} = tmpGGM.AdaptTheta;			
+			tmpgrphs(1) = {tmpGGM.AdaptTheta};			
 		end
-		grphs(ii) = tmpgrphs;
+		grphs(ii) = tmpgrphs
 	end	
 	
 	if(usePairs)
@@ -153,7 +160,7 @@ function [grphs] = resample_helper(self,submat,varargin)
 	end
 	
 	if(usePairs)
-		parfor ii=1:nresamples
+		for ii=1:nresamples
 			tmpgrphs = cell(1,1);
 			if(self.Lambda==0)
 				tmpGGM = GGM(self.Data(cp_submat(ii,:),:,:), 1, 0);
@@ -162,7 +169,7 @@ function [grphs] = resample_helper(self,submat,varargin)
 				if(ii==1)
 					tmpGGM
 				end			
-				tmpgrphs{1,1} = tmpGGM.ThetaPath;
+				tmpgrphs(1) = {tmpGGM.ThetaPath};
 			else
 				tmpGGM = GGM(self.Data(cp_submat(ii,:),:,:),1,self.Lambda);
 				tmpGGM.verbose = self.verbose; 				
@@ -170,7 +177,7 @@ function [grphs] = resample_helper(self,submat,varargin)
 				if(ii==1)
 					tmpGGM
 				end
-				tmpgrphs{1,1} = tmpGGM.AdaptTheta;			
+				tmpgrphs(1) = {tmpGGM.AdaptTheta};			
 			end
 			grphs(ii+nresamples) = tmpgrphs;
 		end		
