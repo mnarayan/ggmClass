@@ -33,13 +33,13 @@ function [self results] = stableEstimate(self,varargin)
 	% random generator state;
 	rng(currstate);
 	if(m<5*p) % subsample
-		if(m>100)
+		if(m<100)
 			b = max(ceil(10*sqrt(m)), ceil(m/2));
 		else
 			b = ceil(m/2); 
 		end
 		%submat = gensubsamples(N,m,b);
-		submat = genblockresamples(N,m,min(b,60),0); 
+		submat = genblockresamples(N,m,max(b,60),0); 
 		
 	elseif(m>5*p) % bootstrap
 		b = ceil(.7*m);		
@@ -73,7 +73,7 @@ function [self results] = stableEstimate(self,varargin)
 		case 'resample'					
 			assert(size(submat,1)>=10,'Atleast 10 resamples must be used')
 			assert(size(submat,2)>=floor(m/2),'Subsample size should be at least 10\sqrt(n) or m/2')
-			grphs = resample_helper(self,submat); 
+			grphs = resample_helper(self,submat,1); 
 			tmpPi = zeros(p,p,size(grphs{1},3)); 
 			for ii=1:length(grphs)
 				tmpPi = tmpPi + (abs(grphs{ii,1}(:,:,:,1))~=0); 
@@ -127,18 +127,20 @@ function [grphs] = resample_helper(self,submat,varargin)
 		tmpgrphs = cell(1,1);
 		if(self.Lambda==0)
 			tmpGGM = GGM(self.Data(submat(ii,:),:,:), 1, 0);
+			tmpGGM.verbose = self.verbose; 
 			tmpGGM.estimate();
 			if(ii==1)
 				tmpGGM
 			end			
 			tmpgrphs{1,1} = tmpGGM.ThetaPath;
 		else
-			tmpGGM = GGM(self.Data(submat(ii,:),:,:));
+			tmpGGM = GGM(self.Data(submat(ii,:),:,:),1,self.Lambda);
+			tmpGGM.verbose = self.verbose; 			
 			tmpGGM.estimate();
 			if(ii==1)
 				tmpGGM
 			end
-			tmpgrphs{1,1} = tmpGGM.Theta;			
+			tmpgrphs{1,1} = tmpGGM.AdaptTheta;			
 		end
 		grphs(ii) = tmpgrphs;
 	end	
@@ -155,18 +157,20 @@ function [grphs] = resample_helper(self,submat,varargin)
 			tmpgrphs = cell(1,1);
 			if(self.Lambda==0)
 				tmpGGM = GGM(self.Data(cp_submat(ii,:),:,:), 1, 0);
+				tmpGGM.verbose = self.verbose; 				
 				tmpGGM.estimate();
 				if(ii==1)
 					tmpGGM
 				end			
 				tmpgrphs{1,1} = tmpGGM.ThetaPath;
 			else
-				tmpGGM = GGM(self.Data(cp_submat(ii,:),:,:));
+				tmpGGM = GGM(self.Data(cp_submat(ii,:),:,:),1,self.Lambda);
+				tmpGGM.verbose = self.verbose; 				
 				tmpGGM.estimate();
 				if(ii==1)
 					tmpGGM
 				end
-				tmpgrphs{1,1} = tmpGGM.Theta;			
+				tmpgrphs{1,1} = tmpGGM.AdaptTheta;			
 			end
 			grphs(ii+nresamples) = tmpgrphs;
 		end		
@@ -179,8 +183,8 @@ end
 function [submat] = genbootstraps(N,n,b)
 	
 	submat = zeros(N,b);
-	for i = 1:N
-		submat(i,:) = randsample(n,b,1);
+	for ii = 1:N
+		submat(ii,:) = randsample(n,b,1);
 	end
 	
 end
@@ -188,8 +192,8 @@ end
 function [submat] = gensubsamples(N,n,b)
 	
 	submat = zeros(N,b);
-	for i = 1:N
-		submat(i,:) = randsample(n,b);
+	for ii = 1:N
+		submat(ii,:) = randsample(n,b);
 	end
 end
 
