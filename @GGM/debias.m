@@ -20,10 +20,11 @@ function [varargout] = debias(self,varargin)
 	if(isobject(self))	
 		sprintf('This is a %s class object',mfilename('class'));		
 		self.Theta = debiaser(self.Sigma,self.Theta);	
-	else
-		nargoutchk(1);
-		self.Theta_debias = debiaser(self.Sigma,options.Theta);		
-		varargout{1} = self;		
+	else		
+		self.Theta_debias = debiaser(self.Sigma,self.Theta);		
+		if(nargout==1)
+			varargout{1} = self;	
+		end	
 	end
 
 
