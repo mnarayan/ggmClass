@@ -73,6 +73,7 @@ function [X mu sig]  = standardize(X)
 	mu 	= mean(X); 
 	X 	= bsxfun(@minus,X,mu); 
 	sig = std(X); 
+	assert(any(sig<1e-5)==0,'Check data matrix for near constant or 0 rows or colums'); 	
 	X 	= bsxfun(@rdivide,X,sig);  	
 
 end
@@ -107,11 +108,12 @@ function [X output] = successive_normalize(X,options)
 		mu 	= mean(X); 
 		X 	= bsxfun(@minus,X,mu); 
 		sig = std(X); 
+		assert(any(sig<1e-5)==0,'Check data matrix for near constant or 0 rows or colums'); 
 		X 	= bsxfun(@rdivide,X,sig);  	
 
 	end
 
-	while (stop_err > tol)|(k<=n_iter)
+	while ((stop_err > tol) && (k<=n_iter))
 	
 		if(k==0)
 			[X_colpolish mu_c sig_c] = standardize(X); 
