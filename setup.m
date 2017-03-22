@@ -11,8 +11,9 @@ if(USE_LIGHTSPEED)
 end
 
 % Tests
-USE_TESTS=false;
+USE_TESTS=true;
 if(USE_TESTS)
+	addpath(genpath('../matlab-library/test/matlab-xunit'));
 	addpath('test');
 	addpath(genpath('../pggm-sims')); 
 end
