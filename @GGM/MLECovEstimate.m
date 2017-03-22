@@ -18,6 +18,7 @@ function [self results] = MLECovEstimate(self,varargin)
 		results.succnorm = sn_results;
 		results.Xclean = X;		
 	else
+		X = self.Data;
 		results.succnorm = [];
 		results.Xclean = [];		
 	end
