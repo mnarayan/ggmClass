@@ -11,14 +11,21 @@ function [self results] = MLECovEstimate(self,varargin)
 	% Default options
 	options.verbose = false;
 	options.weight = eye(p);
+	options.standardize = false;
 
-	[X sn_results] = successive_normalize(self.Data,options); 
+	if(options.standardize)
+		[X sn_results] = successive_normalize(self.Data,options); 
+		results.succnorm = sn_results;
+		results.Xclean = X;		
+	else
+		results.succnorm = [];
+		results.Xclean = [];		
+	end
+	
 	Sighat = sampleWeightedCov(X,options.weight,options);
 	[D R] = varcorr(Sighat);
 	
 	self.Sigma = Sighat;
-	results.succnorm = sn_results;
-	results.Xclean = X;
 	results.D = D; 
 	results.R = R; 
 
@@ -67,17 +74,6 @@ function [self results] = MLECovEstimate(self,varargin)
 end
 
 
-function [X mu sig]  = standardize(X)
-	%STANDARDIZE is a helper function for SUCCESSIVE_NORMALIZE
-		 
-	mu 	= mean(X); 
-	X 	= bsxfun(@minus,X,mu); 
-	sig = std(X); 
-	assert(any(sig<1e-5)==0,'Check data matrix for near constant or 0 rows or colums'); 	
-	X 	= bsxfun(@rdivide,X,sig);  	
-
-end
-
 function [X output] = successive_normalize(X,options)
 	%SUCCESSIVE_NORMALIZE implements normalization strategy inspired 
 	% by Olshen and Rajaratnam (2010); Allen and Tibhsirani (2011); 
@@ -117,7 +113,11 @@ function [X output] = successive_normalize(X,options)
 	
 		if(k==0)
 			[X_colpolish mu_c sig_c] = standardize(X); 
-			[X_rowpolish mu_r sig_r] = standardize(X_colpolish');	
+			%[X_rowpolish mu_r sig_r] = standardize(X_colpolish');
+			
+			[X_rowpolish mu_r sig_r] = standardize(X');	
+			%[X_colpolish mu_c sig_c] = standardize(X_rowpolish'); 
+			
 		else
 			[X_colpolish] = standardize(X_rowpolish'); 
 			[X_rowpolish] = standardize(X_colpolish');					
