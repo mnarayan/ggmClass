@@ -1,20 +1,30 @@
-addpath('solvers');
-addpath('solvers/QUIC');
-
-addpath('external');
-addpath('external/kendalltau'); 
+%%%%%%%%%%%%%%%%%%%%
 USE_LIGHTSPEED = false;
+USE_TESTS=true;
+%%%%%%%%%%%%%%%%%%%%
+MATLABDIR =[getenv('HOME') filesep 'MATLAB'];
+MATLIBPATH=[getenv('HOME') filesep 'MATLAB' filesep 'matlab-library'];
+%%%%%%%%%%%%%%%%%%%%
+
+% External packages specific to this class
+addpath('external');
+addpath(fullfile('external','kendalltau')); 
 if(USE_LIGHTSPEED)
-	addpath('external/lightspeed'); 
+	addpath(fullfile('external','lightspeed')); 
 end
 
+
+% Necessary for GGM estimation
+addpath('solvers');
+addpath(fullfile('solvers','QUIC'));
+
 % Tests
-USE_TESTS=true;
 if(USE_TESTS)
-	addpath(genpath('../matlab-library/test/matlab-xunit'));
+	addpath(genpath(fullfile(MATLIBPATH,...
+					'test','matlab-xunit')));
 	addpath('test');
-	if(exist('../pggm-sims'))
-		addpath(genpath('../pggm-sims')); 
+	if(exist(fullfile(MATLABDIR,'pggm-sims')))
+		addpath(genpath(fullfile(MATLABDIR,'pggm-sims'))); 
 	else
 		warning('simulation package unavailable. All tests will not run');
 	end
