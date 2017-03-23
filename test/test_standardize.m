@@ -89,9 +89,21 @@ function test_unit_diagonal_mean
 end
 
 
-function test_diagonal_null 
+function test_symmetry_uniform_5by5
+	
+	% Olshen and Rajaratnam example
+	X = [ 0.6565 0.2866 0.7095 0.4409 0.8645
+		0.3099 0.3548 0.9052 0.8758 0.0210
+		0.3316 0.5358 0.8658 0.8650 0.0768
+		0.1882 0.9908 0.1192 0.3552 0.3767
+		0.1007 0.0282 0.9553 0.6311 0.1492 ]; 
 
-
+	options.method = 'sym';
+	Xnew1 = standardize.successive_normalize(X,options);
+	Xnew2 = standardize.successive_normalize(X',options)';
+		
+	rowcol_sym = norm(Xnew1-Xnew2,'fro');
+	assert(rowcol_sym<=1e-2,'Symmetry not being enforced in sym mode');
 	
 end
 
