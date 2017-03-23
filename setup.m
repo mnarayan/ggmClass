@@ -1,5 +1,3 @@
-addpath('@GGM');
-addpath('@admm');
 addpath('solvers');
 addpath('solvers/QUIC');
 
@@ -15,5 +13,9 @@ USE_TESTS=true;
 if(USE_TESTS)
 	addpath(genpath('../matlab-library/test/matlab-xunit'));
 	addpath('test');
-	addpath(genpath('../pggm-sims')); 
+	if(exist('../pggm-sims'))
+		addpath(genpath('../pggm-sims')); 
+	else
+		warning('simulation package unavailable. All tests will not run');
+	end
 end
