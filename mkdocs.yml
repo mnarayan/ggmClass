@@ -1,0 +1,30 @@
+site_name: ggmclass
+site_description: Documentation For Matlab GGM package
+site_author: Manjari Narayan
+site_url: https://mnarayan.github.io/ggmClass
+repo_url: https://github.com/mnarayan/ggmClass
+edit_uri: edit/master/docs/
+copyright: CC-BY-SA-4.0
+
+theme: mkdocs
+docs_dir: docs
+site_dir: html
+
+extra_css: 
+extra_javascript: 
+
+use_directory_urls: True
+dev_addr: '127.0.0.1:8000'
+
+remote_branch: gh-pages
+remote_name: origin
+
+google_analytics: 
+
+markdown_extensions:
+    - smarty
+    - toc:
+        permalink: True
+pages:
+    - Home: index.md
+    - About: about.md
