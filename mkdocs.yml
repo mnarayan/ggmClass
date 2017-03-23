@@ -6,12 +6,14 @@ repo_url: https://github.com/mnarayan/ggmClass
 edit_uri: edit/master/docs/
 copyright: CC-BY-SA-4.0
 
-theme: mkdocs
+theme: material
 docs_dir: docs
 site_dir: html
 
 extra_css: 
+# huge? 
 extra_javascript: 
+# mathjax
 
 use_directory_urls: True
 dev_addr: '127.0.0.1:8000'
