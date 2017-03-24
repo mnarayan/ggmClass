@@ -122,7 +122,7 @@ function [Sigma results] = tylermle_sample_covariance(X, varargin)
 		switch shrinkage_method
 		case 'Chen-Hero'
 			Sigma_k = (1-rho) * p/m * Ck + rho*TargetCov; % LW shrinkage
-			Sigma_k = Sigma_k/(trace(Sigma_k)); 
+			Sigma_k = Sigma_k/trace(Sigma_k); 
 		case 'Wiesel'
 			% This can be reparametrized. Maybe faster to do this.
 			% Sigma2 = sqrtm(inv(TargetCovf))*Sigma*sqrtm(inv(TargetCovf))
@@ -162,11 +162,13 @@ function [Sigma results] = tylermle_sample_covariance(X, varargin)
 	end
 	
 	
-	Sigma = Sigma_k;
+	Sigma = Sigma_k/(trace(Sigma_k)/p);	
+	tmpD = diag(1./sqrt(diag(Sigma)));
+	Sigma = tmpD*Sigma*tmpD;
 	
 	results.Rk = Rk;
 	results.W = TargetCov; 
-	results.Sigma = Sigma_k;
+	results.Sigma = Sigma;
 	results.Theta = Theta_k;
 	results.kk = kk;
 	results.rho = rho;
