@@ -10,18 +10,31 @@ function [R results] = var_corr(Sigma,options)
 	if(~exist('options','var'))
 		options = [];
 	end
+	
+	if(isfield(options,'verbose'))
+		verbose=options.verbose;
+	else
+		options.verbose = true;
+		verbose = options.verbose;
+	end
 
 	import covariance.check_symposdef
-	[issym isposdef] = check_symposdef(Sigma);
+	[issym isposdef results.symposdef] = check_symposdef(Sigma);
 	try
 		assert(issym>=1,'Not symmetric')
 	catch me
-		disp(me)
+		if(verbose)
+			disp(me)
+			results.symposdef.sym_err
+		end		
 	end
 	try	
 		assert(isposdef>=1,'Negative Eigenvalues')
 	catch me
-		disp(me)
+		if(verbose)
+			disp(me)
+			min(results.symposdef.eigs)
+		end
 	end
 		
 	results.input.Sigma = Sigma;
@@ -30,7 +43,11 @@ function [R results] = var_corr(Sigma,options)
 	results.isposdef = isposdef;
 	
 	if(issym==1)
-		disp('Symmetricizing input');
+		if(verbose)
+			disp('Frob. Error: A-At')
+			results.symposdef.sym_err
+			disp('Symmetricizing input');
+		end
 		Sigma = (Sigma + Sigma')/2;
 	end
 	
