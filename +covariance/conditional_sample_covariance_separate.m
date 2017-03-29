@@ -18,12 +18,19 @@ function [Sigma results] = conditional_sample_covariance_separate(X,options)
 	if(~exist('options','var'))
 		options = []
 	end
-	
 	if(isempty(options))
+		options = []
+	end
+	if(~isfield(options,'verbose'))
 		options.verbose = false;
+	end
+	if(~isfield(options,'outputdir'))
 		options.outputdir = fullfile('tmp',datestr(now,'dd-mmm-yyyy-HHMM')); 
+	end	
+	if(~isfield(options,'filename'))
 		options.filename = mfilename;
 	end
+	
 	% TBD: Add process_options or processArgs
 	% ~isfield(options,'verbose')
 	
