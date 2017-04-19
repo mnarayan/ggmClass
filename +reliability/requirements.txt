@@ -1,0 +1,1 @@
+IPN_agreement https://www.mathworks.com/matlabcentral/fileexchange/22122-ipn-tools-for-test-retest-reliability-analysis
