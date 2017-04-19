@@ -85,9 +85,7 @@ function [Sigma results] = conditional_sample_covariance_separate(X,options)
 	end
 	
 	if(~isfield(options,'xcorrfun'))
-		
 		options.xcorrfun = @(X,y)(my_xcorr(X,y,struct('standardize',false)));
-		
 	end
 	
 	if(~isfield(options,'nuisance'))
@@ -119,8 +117,14 @@ function [Sigma results] = conditional_sample_covariance_separate(X,options)
 		% 	gsProj = gsr'*X(:,ii)/(gsr'*gsr)*gsr;
 		% 	Xy = X(:,ii) - gsProj;
 		% end
+		
+		mu = mean(X); 
+		Xcen = bsxfun(@minux,X,mu); 
+		
 		proj = @(X)(X*pinv(X'*X)*X');
-		Xy = X - proj(Y)*X;
+		Xy = Xcen - proj(Y)*Xcen;
+		Xy = bsxfun(@plus,Xy,mu);
+		 
 	end
 
 	results.X_perpY = Xy_orthogonalize(X,options.nuisance);
