@@ -1,7 +1,7 @@
 function output = complementary_pairs_reliability(X,options)
 %COMPLEMENTARY_PAIRS_RELIABILITY repeatedly applies some custom metric to
-% disjoint data splits such as 2-fold CV splits using custom function and
-% returns reliability of the metric using custom function
+% disjoint data splits such as 2-fold CV splits using a custom function and
+% returns reliability of the metric using a custom function
 % 
 % Requires  GENERATOR.CREATE_REPEATEDKFOLD
 % 
