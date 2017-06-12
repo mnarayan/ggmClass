@@ -81,3 +81,40 @@ function [scores lrange ind3] = stars(self,obj,grphs)
 			grphs3{cc} = theta;
                
     end
+    
+    
+end
+
+function monotonic_score(ustat,varargin)
+    
+    
+    
+    
+    
+end
+
+
+
+function graphlet_ustat(grphs,varargin)
+   
+    if(nargin==2)
+        options=varargin{1}; 
+    elseif(nargin==1)
+        options = {}; 
+        options.graphlet = 'dyad'; % edgelet       
+    end
+    
+    nresamples = length(grphs); 
+    p = size(grphs{1},1);
+    switch ndims(grphs{1})
+    case 3
+        nlambdas = size(grphs{1},3); 
+    case 4
+        nlambdas = size(grphs{1},3);         
+        nsubjects = size(grphs{1},4);
+    end      
+        
+    % Default stability ustatistic uses dyadic (edgelet stability)    
+    
+    
+end
