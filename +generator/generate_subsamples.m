@@ -57,7 +57,7 @@ function resampler = generate_subsamples(varargin)
 		if(var_window>blocklength)
 			warning('Length of variable block component too large'); 
 			disp('Setting to max variable length to .25 of blocklength'); 
-			var_window = max(3,ceil(blocklength/3);
+			var_window = max(3,ceil(blocklength/3));
 		end
 		
 		blockresamples = gensubsamples(N,tot_blocks,n_blocks);
