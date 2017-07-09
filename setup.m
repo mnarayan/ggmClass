@@ -12,8 +12,12 @@ addpath(fullfile('external','kendalltau'));
 if(USE_LIGHTSPEED)
 	addpath(fullfile('external','lightspeed')); 
 end
+addpath(genpath(fullfile('external',...
+                'matlab-bgl')));
 addpath(genpath(fullfile(MATLIBPATH,...
 				'lib','KPMtools')));
+addpath(genpath(fullfile(MATLIBPATH,...
+				'lib','MATLAB-ParseArgs')));
 
 % Necessary for GGM estimation
 addpath('solvers');
