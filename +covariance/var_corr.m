@@ -20,21 +20,13 @@ function [R results] = var_corr(Sigma,options)
 
 	import covariance.check_symposdef
 	[issym isposdef results.symposdef] = check_symposdef(Sigma);
-	try
+    try
 		assert(issym>=1,'Not symmetric')
 	catch me
 		if(verbose)
 			disp(me)
 			results.symposdef.sym_err
 		end		
-	end
-	try	
-		assert(isposdef>=1,'Negative Eigenvalues')
-	catch me
-		if(verbose)
-			disp(me)
-			min(results.symposdef.eigs)
-		end
 	end
 		
 	results.input.Sigma = Sigma;
@@ -52,12 +44,20 @@ function [R results] = var_corr(Sigma,options)
 	end
 	
 	p 	= length(Sigma); 
-
 	gam = sqrt(diag(Sigma));
+    gam(abs(gam)<=eps) = 1.0;
 	d 	= 1./gam;
-
 	R 	= diag(d)*Sigma*diag(d);
 	
+	try	
+		assert(isposdef>=1,'Negative Eigenvalues')
+	catch me
+		if(verbose)
+			disp(me)
+			min(results.symposdef.eigs)
+		end
+	end
+    
 	results.var = d;
 	results.corr = R; 
 	
