@@ -28,13 +28,7 @@ function [SigHat results] = mle_sample_covariance(X,varargin)
 		options.verbose = true;
 		options.standardize = true;
 	end	
-	
-	if(options.standardize); 
-		[Y succnorm] = standardize.successive_normalize(X');
-		X = Y';		
-	else
-		[X succnorm] = standardize.standardize_cols(X);		
-	end
+
 	
 	% Initialize
 	SigHat = zeros(p,p);
@@ -51,14 +45,23 @@ function [SigHat results] = mle_sample_covariance(X,varargin)
 		for cc=1:n
 			SigHat = SigHat + X(:,:,cc)'*M*X(:,:,cc)/m;
 		end
+        results.succnorm = [];
 		SigHat = SigHat/n;
 	else
+        
+    	if(options.standardize);         
+    		[Y succnorm] = standardize.successive_normalize(X');
+    		X = Y';		
+    	else
+    		[X succnorm] = standardize.standardize_cols(X);		
+    	end
+    	results.succnorm = succnorm; 
+        
 		SigHat = (X'*M*X)/m;
 	end
 	
 	results.X = X; 
 	results.whitenMatrix = M; 	
-	results.succnorm = succnorm; 
 	results.options = options;
 	
 end
