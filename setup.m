@@ -1,6 +1,7 @@
 %%%%%%%%%%%%%%%%%%%%
-USE_LIGHTSPEED = false;
+USE_LIGHTSPEED = true;
 USE_TESTS=true;
+USE_MEX=true;
 %%%%%%%%%%%%%%%%%%%%
 MATLABDIR =[getenv('HOME') filesep 'MATLAB'];
 MATLIBPATH=[getenv('HOME') filesep 'MATLAB' filesep 'matlab-library'];
@@ -11,6 +12,9 @@ addpath('external');
 addpath(fullfile('external','kendalltau')); 
 if(USE_LIGHTSPEED)
 	addpath(fullfile('external','lightspeed')); 
+end
+if(USE_MEX)
+	addpath(fullfile('external','mex')); 
 end
 addpath(genpath(fullfile('external',...
                 'matlab-bgl')));
