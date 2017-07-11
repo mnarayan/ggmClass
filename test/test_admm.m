@@ -15,8 +15,17 @@ if min(eig(Sinv)) < 0  % make positive definite
 end
 S = inv(Sinv);
 
-% generate Gaussian samples
-D = mvnrnd(zeros(1,n), S, N);
+
+USE_SIMULATION = false;
+if(USE_SIMULATION)
+    % generate Gaussian samples
+    D = mvnrnd(zeros(1,n), S, N);
+else
+    % generate Gaussian samples
+    bnustudy = load('~/MATLAB/datasets/CoRR/desikan/BNU1/task-rest_bold');
+    D = standardize.successive_normalize(bnustudy.output{1}.Data(:,:,1)')';
+    n = size(D,2);
+end
 
 %% Solve problem
 Sighat = corr(D);
@@ -24,8 +33,10 @@ output = admm.admm_solver(Sighat);
 X = output.Theta;
 history = output.history; 
 
+parcor = @(Theta)(2*eye(length(Theta))-diag(1./sqrt(diag(Theta)))*Theta*diag(1./sqrt(diag(Theta))));
+
 %% Solve Adaptive problem: Caution. Currently noisier estimates
-isAdaptive = false;
+isAdaptive = true;
 if(isAdaptive)
 	disp('Checking weighted ADMM')
 	new_options = output.options; 
@@ -38,20 +49,20 @@ end
 isPathwise = true;
 if(isPathwise)
 	new_options = output.options;
-	maxLambda = max(max(triu(S,1))); 
-	n_lambda = 25;
-	new_options.lambda = linspace(.01,maxLambda,n_lambda); 
+	maxLambda = max(max(triu(Sighat,1)));
+    minLambda = .01;
+	n_lambda = 30;
+    new_options.lambda = linspace(minLambda,maxLambda,n_lambda);
 	new_options.maxLambda = maxLambda; 
 	new_options.pathwise = true;
 	new_output = admm.admm_solver(Sighat,new_options); 
 end
 
 if(~isPathwise)
-	figure; imagesc(X); axis equal image; 
+	X_admm = X;
+	figure; imagesc(parcor(X_admm)); axis equal image; 
 	%% Reporting
 	K = length(history.objval);                                                                                                        
-	X_admm = X;
-
 	h = figure;
 	plot(1:K, history.objval, 'k', 'MarkerSize', 10, 'LineWidth', 2); 
 	ylabel('f(x^k) + g(z^k)'); xlabel('iter (k)');
@@ -70,10 +81,10 @@ else
 	figure('Position',[75   150   900   650]); 
 	n_cols = 5; 
 	n_rows = n_lambda/n_cols;
-	for ii=1:n_lambda
+	for ii=1:2:n_lambda
 		X = new_output{ii}.('Theta');		
 		subplot(n_rows,n_cols,ii)
-		imagesc(X); axis equal image; 
+		imagesc(abs(parcor(X))>minLambda); axis equal image; 
 		title(sprintf('Lambda = %.2f',new_output{ii}.('options').('lambda'))); 
 	end
 	
