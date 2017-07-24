@@ -20,13 +20,13 @@ function [SigHat results] = mle_sample_covariance(X,varargin)
 			options.verbose = true;
 		end
 		if(~isfield(options,'standardize'))
-			options.standardize = true;
+			options.standardize = 'rowcolumn';
 		end
 	else
 		% default
 		options.M = eye(m);
 		options.verbose = true;
-		options.standardize = true;
+		options.standardize = 'rowcolumn';
 	end	
 
 	
@@ -49,13 +49,20 @@ function [SigHat results] = mle_sample_covariance(X,varargin)
 		SigHat = SigHat/n;
 	else
         
-    	if(options.standardize);         
+    	switch options.standardize
+        case 'rowcolumn'        
     		[Y succnorm] = standardize.successive_normalize(X');
+        	results.succnorm = succnorm; 
+            
     		X = Y';		
-    	else
-    		[X succnorm] = standardize.standardize_cols(X);		
-    	end
-    	results.succnorm = succnorm; 
+        case 'cols'
+    		[X results.mu_c results.sig_c] = ...
+                             standardize.standardize_cols(X);		
+        otherwise
+            warning('Using Sample Covariance');
+            [X results.mu_c results.sig_c] = ...
+                            standardize.standarize_cols(X,'center');
+        end
         
 		SigHat = (X'*M*X)/m;
 	end
