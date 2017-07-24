@@ -7,19 +7,30 @@ function [Rho] = rank_sample_covariance(X,varargin)
 % 
 % SEE ALSO GGM.MLECOVESTIMATE GGM.RANKCOVESTIMATE
 % 
+    
+    if (nargin>1)
+        method = varargin{1};
+    else
+        method = 'spearman';
+    end
 
-	% % Use spearman's
-	% Xranks = tiedrank(X,1);
-	% InitRho = corr(Xranks);
-	% Rho  = 2*sin(pi/6.*InitRho);
+    switch method
+    case 'spearman'
+        
+    	% % Use spearman's
+        Xranks = tiedrank(X,1);
+        InitRho = corr(Xranks);
+        Rho  = 2*sin(pi/6.*InitRho);
 	
-	% Use Kendall's
-	if(exist('kendalltau') & numel(X)<1e6)
-		Rho = kendalltau(X); 
-	else
-		Rho = corr(X,'type','kendall'); 
-	end
+    case 'kendalltau'
+    	% Use Kendall's
+    	if(exist('kendalltau') & numel(X)<1e6)
+    		Rho = kendalltau(X); 
+    	else
+    		Rho = corr(X,'type','kendall'); 
+    	end
 	
-	Rho = sin((pi/2).*Rho); 	
-	
+    	Rho = sin((pi/2).*Rho); 	
+    
+    end
 end
