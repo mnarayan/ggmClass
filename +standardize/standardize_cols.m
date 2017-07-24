@@ -19,7 +19,15 @@ function [X mu sig]  = standardize_cols(X,varargin)
 	
 	mu 	= mean(X); 		 
 	sig = std(X,1); 
-	assert(any(sig<1e-5)==0,'Check data matrix for near constant or 0 rows or colums'); 	
+    
+    try
+	    assert(any(sig<1e-5)==0,...
+	            'Check data matrix for near constant or 0 rows or colums' ...
+	           );
+    catch me
+        disp(me);
+        sig(sig<1e-5) = 1.0; 
+    end 	
 	
 	switch method
 		
