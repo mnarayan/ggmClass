@@ -1,8 +1,12 @@
 function options = create_options(varargin)
     
     % Default options for estimator
+    options.covfun = @(X)(covariance.mle_sample_covariance(X,...
+                                        struct('standardize','cols') ...
+                                        ));
     options.estimator = @sparseMLE;
     options.solver = 'QUIC';
+    options.adaptive = true;
     
     % Default options for the regularization path
     options.get_lambda = @(Sigma)({...
