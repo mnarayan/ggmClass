@@ -11,11 +11,11 @@ function [self results] = stableEstimate(self,varargin)
 	case 2
 		currstate = varargin{1};
 		modselfun = @stars;
-		N = 10;
+		N = 25;
 	case 3
 		currstate = varargin{1};
 		modselfun = varargin{2}; 
-		N = 10;
+		N = 25;
 		
 	case 4
 		currstate = varargin{1};
@@ -33,12 +33,13 @@ function [self results] = stableEstimate(self,varargin)
 	% random generator state;
 	rng(currstate);
 	if(m<5*p) % subsample
-		if(m<100)
-			b = max(ceil(10*sqrt(m)), ceil(m/2));
+		if(m<120)
+			b = min(ceil(10*sqrt(m)), ceil(.6*m));
 		else
 			b = ceil(m/2); 
 		end
 		%submat = gensubsamples(N,m,b);
+        [N,m,b]
 		submat = genblockresamples(N,m,max(b,60),0); 
 		
 	elseif(m>5*p) % bootstrap
@@ -55,12 +56,15 @@ function [self results] = stableEstimate(self,varargin)
 			assert(size(submat,1)>=2,'Atleast 2 resamples must be used')
 			assert(size(submat,2)>=ceil(m/2),'Subsample size should be at least 10\sqrt(n) or m/2')
 			grphs = resample_helper(self,submat,1); 
-			%[score ] = stars(self,...
-			%				struct('n',m,'p',p,'s',1,'estMethod','QUIC','dm',X,'nlambda',100,'beta',.1),...
-			%				grphs); 
-			% if(self.verbose)
-			% 	self.plot(score)
-			% end			
+            [scores best_lambda] = estimator.stars(grphs)
+            if(self.verbose)
+                %self.plot(scores)
+            end
+			tmpGGM = GGM(self.Data(:,:,1),1,0); 
+            [tmpGGM mleresults] = tmpGGM.estimate();
+            mleresults.sparsemle.sparsity'
+			self.ThetaPath = tmpGGM.ThetaPath;
+			self.Theta = tmpGGM.ThetaPath(:,:,best_lambda);			
 			warning('Change to take in alternative grid of lambdas')		
 							
 		case 'stsel'
@@ -106,7 +110,13 @@ function [self results] = stableEstimate(self,varargin)
 	end
 	
 	results.grphs = grphs; 
-	results.modselfun = modselfun; 
+	results.modselfun = modselfun;
+    if(exist('scores'))
+        results.scores = scores;
+    end
+    if(exist('best_lambda'))
+        results.best_lambda = best_lambda;
+    end
 	results.currstate = currstate; 
 	results.submat = submat;
 			
@@ -116,7 +126,6 @@ end
 function [grphs] = resample_helper(self,submat,varargin)
 	
 	[nresamples] = size(submat,1); 
-	grphs = cell(2*nresamples,1); 		
 	
 	if(nargin>=3)
 		usePairs = varargin{1}; 
@@ -126,6 +135,12 @@ function [grphs] = resample_helper(self,submat,varargin)
 	if(length(unique(submat(1,:)))~=size(submat,2))
 		usePairs = false;
 	end
+
+    if(usePairs)
+    	grphs = cell(2*nresamples,1); 		
+    else
+        grphs = cell(nresamples,1);
+    end
 
 	m = size(self.Data,1);
 
@@ -181,9 +196,8 @@ function [grphs] = resample_helper(self,submat,varargin)
 			end
 			grphs(ii+nresamples) = tmpgrphs;
 		end		
+    	grphs = reshape(grphs, [nresamples 2]);     
 	end
-
-	grphs = reshape(grphs, [nresamples 2]); 
 		
 end
 
