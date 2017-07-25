@@ -27,6 +27,7 @@ function test_diagonal_matrix
     
     options.nlambdas = 1;
     options.Lambda = .1;
+    options.refit = true;
     results = estimator.fit(Data,options);
     
     

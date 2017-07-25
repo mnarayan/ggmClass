@@ -62,7 +62,7 @@ function [self results] = stableEstimate(self,varargin)
             end
 			tmpGGM = GGM(self.Data(:,:,1),1,0); 
             [tmpGGM mleresults] = tmpGGM.estimate();
-            mleresults.sparsemle.sparsity'
+            mleresults.sparsemle.sparsity';
 			self.ThetaPath = tmpGGM.ThetaPath;
 			self.Theta = tmpGGM.ThetaPath(:,:,best_lambda);			
 			warning('Change to take in alternative grid of lambdas')		

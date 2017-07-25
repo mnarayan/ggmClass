@@ -64,26 +64,18 @@ function [SigHat ThetaHat S options] = penalized_mle_inverse_covariance(X,vararg
             warning('Only lasso_mle supported') 
         end
         
-        if(~isempty(options.W))
-            warning('options.refit is turned on. Overwriting options.W');
-        end 
-        if(ndims(ThetaHat0)==2)       
-            options.W = options.lambda_max*100.*(ThetaHat0==0) + ...
-                                1.0.*(ThetaHat0~=0);
-        else
-           warning(['Need to perform model selection first. ...' ...
-                   ' Cannot refit to a path of estimates']);
+        [SigHat ThetaHat options] = constrain_mle(S,ThetaHat0,options);
+
+    else
+
+        switch options.estimator
+
+        case 'lasso_mle'
+           [SigHat ThetaHat] = lasso_mle(S,options);
+        otherwise
+           warning('Only lasso_mle supported') 
         end
     end
-
-    switch options.estimator
-
-    case 'lasso_mle'
-       [SigHat ThetaHat] = lasso_mle(S,options);
-    otherwise
-       warning('Only lasso_mle supported') 
-    end
-    
 
 end
 
@@ -108,9 +100,28 @@ function [Sighat ThetaHat] = lasso_clime(S,options)
 end
 
 
-function [SigHat ThetaHat] = constrain_mle(S,options)
+function [SigHat ThetaHat options] = constrain_mle(S,ThetaHat0,options)
     
     
+    
+    if(~isempty(options.W))
+        warning('options.refit is turned on. Overwriting options.W');
+    end 
+    if(ndims(ThetaHat0)==2)       
+        options.W = options.lambda_max*100.*(ThetaHat0==0) + ...
+                            1.0.*(ThetaHat0~=0);
+    else
+       warning(['Need to perform model selection first. ...' ...
+               ' Cannot refit to a path of estimates']);
+    end
+
+    switch options.estimator
+
+    case 'lasso_mle'
+       [SigHat ThetaHat] = lasso_mle(S,options);
+    otherwise
+       warning('Only lasso_mle supported') 
+    end
 
     
 end
