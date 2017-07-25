@@ -10,6 +10,7 @@ MATLIBPATH=[getenv('HOME') filesep 'MATLAB' filesep 'matlab-library'];
 % External packages specific to this class
 addpath('external');
 addpath(fullfile('external','kendalltau')); 
+addpath(fullfile('external','arfit')); 
 if(USE_LIGHTSPEED)
 	addpath(fullfile('external','lightspeed')); 
 end
