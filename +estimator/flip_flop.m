@@ -19,15 +19,18 @@ function [results] = flip_flop(X,row_options,col_options,varargin)
         ff_defaults.max_iter = 1;
     end
     
-    if(ndims==2)
+    if(ndims(X)==2)
         [m,p] = size(X);
-    elseif(ndims==3)
+    elseif(ndims(X)==3)
         [m,p,n] = size(X);
     end
     
     max_iter = ff_defaults.max_iter;
-    stop_err = ff_defaults.convergence.tol;
+    tol = ff_defaults.convergence.tol;
+    stop_err = 100;
     k = 0;
+    err = nan(1,max_iter); 
+    row_err = err; col_err = err;
 
 	while ((stop_err > tol) && (k<=max_iter))
 	
@@ -39,23 +42,28 @@ function [results] = flip_flop(X,row_options,col_options,varargin)
                                     rX,...
                                     struct('standardize','cols','M', row_M)...
                                     ));
-            [rSig, rThet rS row_fit_opts] = estimate.fit(X',row_options);
-			
+            row_results = estimator.fit(X',row_options);
+			rSig =  row_results.covariance_estimate; 
+            rThet = row_results.inverse_covariance_estimate;
             
+            
+            kappa = rThet(1,1); 
+            rThet = rThet/kappa;
             if(ndims(rThet)==2 & row_options.refit)
                 col_M = rThet;
             else
                 error('Row estimator needs to return single Theta');
             end
-            
             col_options.covariancefun = ...
                             @(cX)(covariance.mle_sample_covariance( ...
                                     cX,...
                                     struct('standardize','cols','M', col_M)...
                                     ));
-            [cSig, cThet cS col_fit_opts] = estimate.fit(X,col_options);
-                
-				
+            col_results = estimator.fit(X,col_options);
+			cSig =  col_results.covariance_estimate; 
+            cThet = col_results.inverse_covariance_estimate;			
+            cThet = kappa*cThet;
+            	
 			oldSigc = cSig;
 			oldSigr = rSig;
             oldThetc = cThet;
@@ -73,9 +81,12 @@ function [results] = flip_flop(X,row_options,col_options,varargin)
                                     rX,...
                                     struct('standardize','cols','M', row_M)...
                                     ));
-            [rSig, rThet rS row_fit_opts] = estimate.fit(X',row_options);
+            row_results = estimator.fit(X',row_options);
+            rSig =  row_results.covariance_estimate; 
+            rThet = row_results.inverse_covariance_estimate;
 			
-            
+            kappa = rThet(1,1); 
+            rThet = rThet/kappa;
             if(ndims(oldThetr)==2 & row_options.refit)
                 col_M = oldThetr;
             else
@@ -86,18 +97,20 @@ function [results] = flip_flop(X,row_options,col_options,varargin)
                                     cX,...
                                     struct('standardize','cols','M', col_M)...
                                     ));
-            [cSig, cThet cS col_fit_opts] = estimate.fit(X,col_options);
-
+            col_results = estimator.fit(X,col_options);
+			cSig =  col_results.covariance_estimate; 
+            cThet = col_results.inverse_covariance_estimate;  
+            cThet = kappa*cThet;
 			
 		end
 	 
-        row_err = (.5*norm(rSig-oldSigr,'fro'))/numel(rSig);
-        col_err = (.5*norm(cSig-oldSigc,'fro'))/numel(cSig);
+        row_err(k+1) = (.5*norm(rSig-oldSigr,'fro'));
+        col_err(k+1) = (.5*norm(cSig-oldSigc,'fro'));
     
-		stop_err = row_err + col_err;
+		stop_err = row_err(k+1) + col_err(k+1);
 	
-		if(k==n_iter)
-			if(options.verbose)				
+		if(k==max_iter | mod(k,10)==0)
+			if(ff_defaults.verbose)				
 				disp(sprintf(...
 				'Iter:%d, stop_err:%.8f. Exiting loop.',k,stop_err));
 			end
@@ -115,17 +128,19 @@ function [results] = flip_flop(X,row_options,col_options,varargin)
 	end
 
 
-    results.row.options = row_options;
-    results.row.covariance_estimate = rSig;
-    results.row.inverse_covariance_estimate = rThet;
-    results.row.sample_covariance = rS;
-    results.row.fit_options = row_fit_opts;
+    results.row = row_results;
+    % results.row.options = row_options;
+    % results.row.covariance_estimate = rSig;
+    % results.row.inverse_covariance_estimate = rThet;
+    % results.row.sample_covariance = rS;
+    % results.row.fit_options = row_fit_opts;
 
-    results.col.options = col_options;
-    results.col.covariance_estimate = cSig;
-    results.col.inverse_covariance_estimate = cThet;
-    results.col.sample_covariance = cS;
-    results.col.fit_options = col_fit_opts;
+    results.col = col_results;
+    % results.col.options = col_options;
+    % results.col.covariance_estimate = cSig;
+    % results.col.inverse_covariance_estimate = cThet;
+    % results.col.sample_covariance = cS;
+    % results.col.fit_options = col_fit_opts;
 
     results.ff_options = ff_defaults;
     results.ff_options.err = err;
@@ -140,6 +155,7 @@ function ff_options = create_options()
    
     ff_options.iterative = false;
     ff_options.convergence.tol = 1e-5;
-    ff_options.max_iter = 1;
+    ff_options.max_iter = 3;
+    ff_options.verbose = true;
     
 end
