@@ -14,6 +14,20 @@ function test_diagonal_matrix
     n = 1;  
     Data = simulate.matrixvariate(m,p,eye(m),eye(p)); 
     
+    options = estimator.create_options();
+    options.refit = false;
+    results = estimator.fit(Data,options);
+    
+    options.refit = true;
+    results = estimator.fit(Data,options);
+    
+    options.nlambdas = 1;
+    options.Lambda = 0; 
+    results = estimator.fit(Data,options);
+    
+    options.nlambdas = 1;
+    options.Lambda = .1;
+    results = estimator.fit(Data,options);
     
     
 end
