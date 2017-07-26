@@ -8,7 +8,7 @@ function options = create_options(varargin)
                                         struct('standardize','cols') ...
                                         ));
     options.init_estimator = 'lasso_mle';                                  
-    options.estimator = 'lasso_mle'
+    options.estimator = 'lasso_mle';
     options.solver = 'QUIC';
     options.refit = false;
     
@@ -30,7 +30,7 @@ function options = create_options(varargin)
     options.path = options.lambdafun(options.lambda_min,options.lambda_max);
     
     % Default options for creating resamples or subsamples
-    options.resampler.options = @generator.create_options
+    options.resampler.options = @generator.create_options;
     options.resampler.run = @(n)(generate_resamples(...
                                             options.resampler.options(n) ...
                                             ));
