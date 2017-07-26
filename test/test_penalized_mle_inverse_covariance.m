@@ -1,4 +1,4 @@
-function test_suite = test_GGM
+function test_suite = test_penalized_mle_inverse_covariance
 	buildFunctionHandleTestSuite(localfunctions);
 
 end
