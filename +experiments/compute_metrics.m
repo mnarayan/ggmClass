@@ -35,21 +35,21 @@ function metrics = compute_metrics(G,G0,varargin)
 	
     if(nunits==1)
         froberr = norm(G-G0,'fro')/trace(G0);
-        spectral = norm(G-G0,2); 
+        matrixL2Err = norm(G-G0,2); 
         condnum = cond(G); 
         graphNorm = trace(G*G)/trace(G);
-        metrics.spectralErr = spectral;
+        metrics.matrixL2Err = matrixL2Err;
         metrics.condnum = condnum; 
         metrics.graphNorm = graphNorm;
         if(verbose)
-            disp(sprintf('Spectral Err. %.2f',spectral));
+            disp(sprintf('L2 Err. %.2f',matrixL2Err));
             disp(sprintf('Off diag. Norm %.2f',graphNorm));
             disp(sprintf('Cond. Num %.2f',condnum));
         end            
     else
     	froberr = squeeze(...
     	      sum(sum(bsxfun(@minus,G,G0).^2,1),2)/sum(sum(G0.^2,1),2));        
-        metrics.spectralErr = nan(nunits,1);
+        metrics.matrixL2Err = nan(nunits,1);
         metrics.condnum = nan(nunits,1);
         metrics.graphNorm = nan(nunits,1);
         
