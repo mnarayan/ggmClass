@@ -1,5 +1,13 @@
-function [mccc Mccc] =  MCCC(X,Y,varargin)
+function [mccc Mccc varargout] =  MCCC(X,Y,varargin)
 %MCCC - Multivariate Concordance Correlation Coefficient	
+% 
+% The matrix_ccc statistic is 
+%       I - {V_indep}^-1/2 * V_dep * {V_indep}^-1/2
+% and the corresponding coefficient is 
+%       1 - matrixnorm(matrix_ccc)/matrixnorm(I_p)
+% where,  
+%   V_dep = sum_i (xi-yi)'*(xi-yi)
+%   V_indep = sum_i sum_j (xi-yj)'(xi-yj)
 % 
 % USAGE: MCCC
 % 
@@ -18,23 +26,40 @@ function [mccc Mccc] =  MCCC(X,Y,varargin)
 	assert(size(X,1)==size(Y,1),'X and Y must have same number of rows'); 
 	assert(size(X,2)==size(Y,2),'X and Y must have same number of cols'); 
 
-    crosscov = @(X,Y)(X'*Y/size(X,1));
+    n = size(X,1); p = size(X,2);
 
-    [mccc Mccc] = matrix_ccc(X,Y,@cov,crosscov); 
+    covfun = @cov;
+    pair_crosscov = @(X,Y)(pairwise_crosscov(X,Y));
+    
+    function SigmaPair = pairwise_crosscov(X,Y)
+        
+        SigmaPair = zeros(p,p);
+        for ii=1:n
+            for jj=setdiff(1:n,ii)
+                SigmaPair = SigmaPair + X(ii,:)'*Y(jj,:);
+            end
+        end
+        
+        SigmaPair = SigmaPair/(size(X,1)*(size(Y,1)-1));
+    end
+
+    [mccc Mccc] = matrix_ccc(X,Y,covfun,pair_crosscov); 
     
 
-	function [mccc M_ccc] = matrix_ccc(X,Y,covfun,crosscov)
+	function [mccc M_ccc] = matrix_ccc(X,Y,covfun,pair_crosscov)
         
-        n = size(X,1); p = size(X,2);
-        
-		mu_x = mean(X,1)*n; 
-		mu_y = mean(Y,1)*n;
-
-		X = bsxfun(@minus,X,mu_x/n); 
-		Y = bsxfun(@minus,Y,mu_y/n);
+        crosscov = @(X,Y)(X'*Y/size(X,1));
+                
+        % mu_x = mean(X,1);
+        % mu_y = mean(Y,1);
+        %
+        % X = bsxfun(@minus,X,mu_x);
+        % Y = bsxfun(@minus,Y,mu_y);
         		
-		V_ind = covfun(X) + covfun(Y) + (mu_x - mu_y)*(mu_x - mu_y)'/(n*(n-1));
-        V_dep = V_ind - crosscov(X,Y) - crosscov(Y,X);
+		V_ind = covfun(X) + covfun(Y) - pair_crosscov(X,Y) - ...
+                            pair_crosscov(Y,X); 
+                            % + (mu_x - mu_y)*(mu_x - mu_y)'/(n*(n-1));
+        V_dep = covfun(X) + covfun(Y) - crosscov(X,Y) - crosscov(Y,X);
         
         [Veig Deig] = eig(V_ind);
         nonneg_eig = find(diag(Deig)>0);
@@ -50,5 +75,21 @@ function [mccc Mccc] =  MCCC(X,Y,varargin)
         
 	end
 
+    % Generate confidence intervals    
+    function [mccc_ci mccc_boot] = matrix_ccc_ci(X,Y,covfun,pair_crosscov)
+        
+        function [mccc] = bootfun(AllData)
+            XX = AllData(:,1:p); 
+            YY = AllData(:,p+1:2*p); 
+            mccc = matrix_ccc(XX,YY,covfun,pair_crosscov);
+        end
+        
+        [mccc_ci mccc_boot] = bootci(50,{@bootfun,cat(2,X,Y)},'type','per');
+    end
 	
+    if nargout>=3    
+        mccc_ci = matrix_ccc_ci(X,Y,covfun,pair_crosscov)
+        varargout{1} = mccc_ci;
+    end
+    
 end
