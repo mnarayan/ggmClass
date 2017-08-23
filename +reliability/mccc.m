@@ -30,66 +30,73 @@ function [mccc Mccc varargout] =  MCCC(X,Y,varargin)
 
     covfun = @cov;
     pair_crosscov = @(X,Y)(pairwise_crosscov(X,Y));
-    
-    function SigmaPair = pairwise_crosscov(X,Y)
-        
-        SigmaPair = zeros(p,p);
-        for ii=1:n
-            for jj=setdiff(1:n,ii)
-                SigmaPair = SigmaPair + X(ii,:)'*Y(jj,:);
-            end
-        end
-        
-        SigmaPair = SigmaPair/(size(X,1)*(size(Y,1)-1));
-    end
 
     [mccc Mccc] = matrix_ccc(X,Y,covfun,pair_crosscov); 
-    
-
-	function [mccc M_ccc] = matrix_ccc(X,Y,covfun,pair_crosscov)
-        
-        crosscov = @(X,Y)(X'*Y/size(X,1));
-                
-        % mu_x = mean(X,1);
-        % mu_y = mean(Y,1);
-        %
-        % X = bsxfun(@minus,X,mu_x);
-        % Y = bsxfun(@minus,Y,mu_y);
-        		
-		V_ind = covfun(X) + covfun(Y) - pair_crosscov(X,Y) - ...
-                            pair_crosscov(Y,X); 
-                            % + (mu_x - mu_y)*(mu_x - mu_y)'/(n*(n-1));
-        V_dep = covfun(X) + covfun(Y) - crosscov(X,Y) - crosscov(Y,X);
-        
-        [Veig Deig] = eig(V_ind);
-        nonneg_eig = find(diag(Deig)>0);
-        Vposdef = Veig(:,nonneg_eig);
-        Dposdef = Deig(nonneg_eig,nonneg_eig);
-        Vsqinv = Vposdef*diag(sqrt(1./diag(Dposdef)))*Vposdef';
-        
-        M_rho = Vsqinv * V_dep * Vsqinv;
-		M_ccc = eye(p) - M_rho;
-        
-        mnorm = @(A)(norm(A,'fro')); 
-        mccc = 1 - mnorm(M_rho)/mnorm(eye(p));
-        
-	end
-
-    % Generate confidence intervals    
-    function [mccc_ci mccc_boot] = matrix_ccc_ci(X,Y,covfun,pair_crosscov)
-        
-        function [mccc] = bootfun(AllData)
-            XX = AllData(:,1:p); 
-            YY = AllData(:,p+1:2*p); 
-            mccc = matrix_ccc(XX,YY,covfun,pair_crosscov);
-        end
-        
-        [mccc_ci mccc_boot] = bootci(50,{@bootfun,cat(2,X,Y)},'type','per');
-    end
 	
     if nargout>=3    
-        mccc_ci = matrix_ccc_ci(X,Y,covfun,pair_crosscov)
+        mccc_ci = matrix_ccc_ci(X,Y,covfun,pair_crosscov);
         varargout{1} = mccc_ci;
     end
+    
+end
+
+function SigmaPair = pairwise_crosscov(X,Y)
+    
+    [n p] = size(X);
+    
+    SigmaPair = zeros(p,p);
+    for ii=1:n
+        for jj=setdiff(1:n,ii)
+            SigmaPair = SigmaPair + X(ii,:)'*Y(jj,:);
+        end
+    end
+    
+    SigmaPair = .5*SigmaPair/(size(X,1)*(size(Y,1)));
+end
+
+function [mccc M_ccc] = matrix_ccc(X,Y,covfun,pair_crosscov)
+    
+    p = size(X,2);
+    
+    crosscov = @(X,Y)(X'*Y/(size(X,1)));
+            
+    mu_x = mean(X,1);
+    mu_y = mean(Y,1);
+
+    X = bsxfun(@minus,X,mu_x);
+    Y = bsxfun(@minus,Y,mu_y);
+    		
+	V_ind = covfun(X) + covfun(Y) - ...
+                        .5*pair_crosscov(X,Y) - ...
+                        .5*pair_crosscov(Y,X); 
+                        % + (mu_x - mu_y)*(mu_x - mu_y)'/(n*(n-1));
+    V_dep = covfun(X) + covfun(Y) - crosscov(X,Y) - crosscov(Y,X);
+    
+    [Veig Deig] = eig(V_ind);
+    nonneg_eig = find(diag(Deig)>0);
+    Vposdef = Veig(:,nonneg_eig);
+    Dposdef = Deig(nonneg_eig,nonneg_eig);
+    Vsqinv = Vposdef*diag(sqrt(1./diag(Dposdef)))*Vposdef';
+    
+    M_rho = Vsqinv * V_dep * Vsqinv;
+	M_ccc = eye(p) - M_rho;
+    
+    mnorm = @(A)(trace(A)); % Alternative, @(A)(norm(A,'fro')); 
+    mccc = 1 - mnorm(M_rho)/mnorm(eye(p));
+    
+end
+
+% Generate confidence intervals    
+function [mccc_ci mccc_boot] = matrix_ccc_ci(X,Y,covfun,pair_crosscov)
+    
+    p = size(X,2);
+    
+    function [mccc] = bootfun(AllData)
+        XX = AllData(:,1:p); 
+        YY = AllData(:,p+1:2*p); 
+        mccc = matrix_ccc(XX,YY,covfun,pair_crosscov);
+    end
+    
+    [mccc_ci mccc_boot] = bootci(100,{@bootfun,cat(2,X,Y)},'type','per');
     
 end
