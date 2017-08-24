@@ -29,7 +29,14 @@ function [SigHat results] = mle_sample_covariance(X,varargin)
 		options.standardize = 'rowcolumn';
 	end	
 
-	
+	if(islogical(options.standardize))
+        if(options.standardize)
+            options.standardize = 'rowcolumn';
+        else
+            options.standardize = 'cols';
+        end
+    end
+    
 	% Initialize
 	SigHat = zeros(p,p);
 	M = options.M;
