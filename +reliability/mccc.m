@@ -54,10 +54,10 @@ function SigmaPair = pairwise_crosscov(X,Y)
     SigmaPair = .5*SigmaPair/(size(X,1)*(size(Y,1)));
 end
 
-function [mccc M_ccc] = matrix_ccc(X,Y,covfun,pair_crosscov)
+function [mccc varargout] = matrix_ccc(X,Y,covfun,pair_crosscov)
     
     p = size(X,2);
-    
+    verbose = false;
     crosscov = @(X,Y)(X'*Y/(size(X,1)));
             
     mu_x = mean(X,1);
@@ -72,18 +72,40 @@ function [mccc M_ccc] = matrix_ccc(X,Y,covfun,pair_crosscov)
                         % + (mu_x - mu_y)*(mu_x - mu_y)'/(n*(n-1));
     V_dep = covfun(X) + covfun(Y) - crosscov(X,Y) - crosscov(Y,X);
     
-    [Veig Deig] = eig(V_ind);
-    nonneg_eig = find(diag(Deig)>0);
-    Vposdef = Veig(:,nonneg_eig);
-    Dposdef = Deig(nonneg_eig,nonneg_eig);
-    Vsqinv = Vposdef*diag(sqrt(1./diag(Dposdef)))*Vposdef';
+    if(nargout>=2)
+        tol = 1e-5;
+        [Veig Deig] = eig(V_ind);
+        nonneg_eig = find(diag(Deig)>tol);
+        if(length(nonneg_eig)<p)
+            Deig = Deig+eye(p)*abs(min(diag(Deig)));
+            nonneg_eig = find(diag(Deig)>tol);
+        end
+        Vposdef = Veig(:,nonneg_eig);
+        Dposdef = Deig(nonneg_eig,nonneg_eig);
+        Vsqinv = Vposdef*diag(sqrt(1./diag(Dposdef)))*Vposdef';
     
-    M_rho = Vsqinv * V_dep * Vsqinv;
-	M_ccc = eye(p) - M_rho;
+        M_rho = Vsqinv * V_dep * Vsqinv;
+    	M_ccc = eye(p) - M_rho;
+        varargout{1} = M_ccc;
+    else
+        nonneg_eig = eigs(V_ind);
+        M_rho = [];
+    end
     
-    mnorm = @(A)(trace(A)); % Alternative, @(A)(norm(A,'fro')); 
-    mccc = 1 - mnorm(M_rho)/mnorm(eye(p));
-    
+    %mnorm = @(A)(norm(A,'fro'));
+    mnorm = @(A)(trace(A)); 
+    if(length(nonneg_eig)==p)
+        mccc = 1 - mnorm(V_dep)/mnorm(V_ind);
+        % mccc = 1 - mnorm(M_rho)/mnorm(eye(p));
+    else
+        if(verbose)
+            warning('V_ind is not postive definite');
+            disp(['Low rank, df=' num2str(length(nonneg_eig))]);
+        end
+        mccc = 1 - mnorm(V_dep)/mnorm(V_ind);
+        % mccc = 1 - mnorm(M_rho)/mnorm(eye(p));
+        
+    end
 end
 
 % Generate confidence intervals    
@@ -97,6 +119,6 @@ function [mccc_ci mccc_boot] = matrix_ccc_ci(X,Y,covfun,pair_crosscov)
         mccc = matrix_ccc(XX,YY,covfun,pair_crosscov);
     end
     
-    [mccc_ci mccc_boot] = bootci(100,{@bootfun,cat(2,X,Y)},'type','per');
+    [mccc_ci mccc_boot] = bootci(50,{@bootfun,cat(2,X,Y)},'type','per');
     
 end
