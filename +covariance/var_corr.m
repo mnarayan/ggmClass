@@ -58,7 +58,7 @@ function [R results] = var_corr(Sigma,options)
 		end
 	end
     
-	results.var = d;
+	results.var = diag(Sigma);
 	results.corr = R; 
 	
 end
