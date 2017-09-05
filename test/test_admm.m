@@ -82,13 +82,26 @@ else
 	n_cols = 5; 
 	n_rows = n_lambda/n_cols;
 	for ii=1:2:n_lambda
-		X = new_output{ii}.('Theta');		
+		X = new_output{ii}.('Theta');
 		subplot(n_rows,n_cols,ii)
 		imagesc(abs(parcor(X))>minLambda); axis equal image; 
 		title(sprintf('Lambda = %.2f',new_output{ii}.('options').('lambda'))); 
 	end
 	
-	
+    sparsity = zeros(1,n_lambda);
+    lambda_vals = sparsity;
+    for ii=1:n_lambda
+		X = new_output{ii}.('Theta');
+        sparsity(ii) = sum(sum(abs(X)>=minLambda));
+        lambda_vals(ii) = new_output{ii}.('options').('lambda');
+    end
+    figure;
+    plot(lambda_vals,...
+        sparsity,...
+        '-',...
+        'LineWidth',2 ...
+        );
+     
 	figure('Position',[250   150   900   650]); 
 	n_cols = 5; 
 	n_rows = n_lambda/n_cols;
