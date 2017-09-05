@@ -12,11 +12,6 @@ function test_hcp25_participant
     
 	results = {};
     
-    % % Initialize
-    % GGMobj = GGM(X);
-    % % Check sample covariance self.Sigma
-    % [GGMobj results.mlecov] = GGMobj.MLECovEstimate();
-    % clear GGMobj;
     nsessions = 4;
     subject_idx = 1;
     for sessionno=1:nsessions
@@ -51,11 +46,6 @@ function test_acpi_participant
     
 	results = {};
     
-    % % Initialize
-    % GGMobj = GGM(X);
-    % % Check sample covariance self.Sigma
-    % [GGMobj results.mlecov] = GGMobj.MLECovEstimate();
-    % clear GGMobj;
     nsessions = 2;
     sessionno = 1;
     subject_idx = 1;
@@ -74,27 +64,16 @@ function test_acpi_participant
         sparsity = squeeze(sum(sum(...
                             abs(results.inverse_covariance_estimate)~=0)) ...
                             -p)/2;
+        figure(1);
         plot(results.fit_options.path,...
                 sparsity,...
                 '-',...
                 'LineWidth',2....
                 );
-                           
-        % clear GGMobj
-        % GGMobj = GGM(X,1,0);
-        % [GGMobj results.sparsemle] = GGMobj.sparseMLE();
-        %         figure(1)
-        % plot(results.sparsemle.Lrange,...
-        %         results.sparsemle.sparsity,...
-        %         '-',...
-        %         'LineWidth',2....
-        %         );
-        % hold on;
-        
+        hold on;
         figure(2)
         subplot(1,nsessions,sessionno);
-        imagesc(GGMobj.ThetaPath(:,:,45));
-        
+        imagesc(GGMobj.ThetaPath(:,:,20));
     end
     
 end
