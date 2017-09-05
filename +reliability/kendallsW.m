@@ -23,7 +23,7 @@ function W =  kendallsW(X,options)
 		W = 12*varR/((n^2)*p*(p^2-1));
 	else
 		% w. ties
-		correction
+		correction;
 		W = (12*sum(sumR.^2) - 3*n^2*p*(p+1)^2)/...
 							((n^2)*p*(p^2-1) - n*sum(correction)); 
 	end
