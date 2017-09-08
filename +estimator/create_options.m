@@ -42,6 +42,8 @@ function options = create_options(varargin)
     options.selection.score = @(Sigma,Theta)(stars(Theta));
     options.graphlet = 'dyad'; % edgelet
     options.instability_beta = .15;
+    options.ebic.loglikefun = @loss.mvn_loglikelihood;
+    options.ebic.gamma = 0;
     
     
 end
