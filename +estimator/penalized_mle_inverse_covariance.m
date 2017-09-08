@@ -59,19 +59,19 @@ function [SigHat ThetaHat S options] = penalized_mle_inverse_covariance(X,vararg
         switch options.init_estimator
         
         case 'lasso_mle'
-            [SigHat0 ThetaHat0] = lasso_mle(S,options);
+            [SigHat0 ThetaHat0] = lasso_mle(X,options);
         otherwise
             warning('Only lasso_mle supported') 
         end
         
-        [SigHat ThetaHat options] = constrain_mle(S,ThetaHat0,options);
+        [SigHat ThetaHat options] = constrain_mle(X,ThetaHat0,options);
 
     else
 
         switch options.estimator
 
         case 'lasso_mle'
-           [SigHat ThetaHat] = lasso_mle(S,options);
+           [SigHat ThetaHat] = lasso_mle(X,options);
         otherwise
            warning('Only lasso_mle supported') 
         end
@@ -80,7 +80,9 @@ function [SigHat ThetaHat S options] = penalized_mle_inverse_covariance(X,vararg
 end
 
 
-function [SigHat ThetaHat] = lasso_mle(S,options)
+function [SigHat ThetaHat] = lasso_mle(X,options)
+    
+    S = options.covariancefun(X);
     
     switch options.solver
     case 'QUIC'
@@ -94,15 +96,16 @@ function [SigHat ThetaHat] = lasso_mle(S,options)
     
 end
 
-function [Sighat ThetaHat] = lasso_clime(S,options)
+function [Sighat ThetaHat] = lasso_clime(X,options)
+    
+    S = options.covariancefun(X);
     
     
     
 end
 
 
-function [SigHat ThetaHat options] = constrain_mle(S,ThetaHat0,options)
-    
+function [SigHat ThetaHat options] = constrain_mle(X,ThetaHat0,options)
     
     
     if(~isempty(options.W))
@@ -119,7 +122,7 @@ function [SigHat ThetaHat options] = constrain_mle(S,ThetaHat0,options)
     switch options.estimator
 
     case 'lasso_mle'
-       [SigHat ThetaHat] = lasso_mle(S,options);
+       [SigHat ThetaHat] = lasso_mle(X,options);
     otherwise
        warning('Only lasso_mle supported') 
     end
@@ -128,7 +131,7 @@ function [SigHat ThetaHat options] = constrain_mle(S,ThetaHat0,options)
 end
 
 
-function [SigHat ThetaHat] = chol_mle(S,options)
+function [SigHat ThetaHat] = chol_mle(X,options)
     
     
 
@@ -136,7 +139,7 @@ function [SigHat ThetaHat] = chol_mle(S,options)
 end
 
 
-function [SigHat ThetaHat] = banded_mle(S,options)
+function [SigHat ThetaHat] = banded_mle(X,options)
     
     
 
