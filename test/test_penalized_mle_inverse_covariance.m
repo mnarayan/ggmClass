@@ -17,6 +17,7 @@ function test_diagonal_matrix
     options = estimator.create_options();
     options.refit = false;
     results = estimator.fit(Data,options);
+    assertEqual(results.ebic.lambda_opt_idx,1,'Does not select empty matrix');
     
     options.refit = true;
     results = estimator.fit(Data,options);
