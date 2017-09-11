@@ -100,8 +100,6 @@ function [Sighat ThetaHat] = lasso_clime(X,options)
     
     S = options.covariancefun(X);
     
-    
-    
 end
 
 
