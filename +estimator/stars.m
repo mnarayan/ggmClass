@@ -1,4 +1,4 @@
-function [scores best_lambda] = stars(grphs,varargin)	
+function [scores best_lambda ustats] = stars(grphs,varargin)	
 %ESTIMATOR.STARS returns optional regularization parameter and scores. 
 % USAGE: [scores] = stars(grphs)
 % INPUTS
@@ -62,7 +62,7 @@ end
 
 
 
-function [instability best_lambda] = monotonic_score(ustats,beta,varargin)
+function [mt_score best_lambda] = monotonic_score(ustats,beta,varargin)
 
     [p,~,nlambdas] = size(ustats);
     
@@ -85,9 +85,9 @@ function [instability best_lambda] = monotonic_score(ustats,beta,varargin)
     mt_score2 = zeros(size(mt_score)); 
     mt_score2(idx_mt_score) = min_scores;    
     min_sparsity = sparsity.*(mt_score2>0); % sparsity values at same locations
-    min_sparsity(min_sparsity==0) = Inf;
+    min_sparsity(min_sparsity==0) = nan;
     
-    [~,best_lambda] = min(min_sparsity); % who is sparsest non-zero graph
+    [~,best_lambda] = max(min_sparsity(~isnan(min_sparsity))); % who is sparsest non-zero graph
     
 end
 
