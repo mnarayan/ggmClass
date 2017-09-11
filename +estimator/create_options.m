@@ -21,12 +21,12 @@ function options = create_options(varargin)
                             });
     options.lambda_min = .01;
     options.lambda_max = 1.0;
-    options.nlambdas = 30;
-    options.lambdafun = @(lmin,lmax)(fliplr(logspace(...
-                                            log10(lmin),...
+    options.nlambdas = 10;
+    options.lambdafun = @(lmin,lmax)(logspace(...
                                             log10(lmax),...
+                                            log10(lmin),...
                                             options.nlambdas...
-                                            )));
+                                            ));
     options.Lambda = 0;
     options.W = [];
     options.path = options.lambdafun(options.lambda_min,options.lambda_max);
@@ -44,6 +44,7 @@ function options = create_options(varargin)
     options.instability_beta = .15;
     options.ebic.loglikefun = @loss.mvn_loglikelihood;
     options.ebic.gamma = 0;
+    options.stability.tau = .9; % Stability threshold;
     
     
 end
