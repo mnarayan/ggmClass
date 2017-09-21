@@ -33,9 +33,7 @@ function options = create_options(varargin)
     
     % Default options for creating resamples or subsamples
     options.resampler.options = @generator.create_options;
-    options.resampler.run = @(n)(generate_resamples(...
-                                            options.resampler.options(n) ...
-                                            ));
+    options.resampler.run = @(opts)(generator.generate_subsamples(opts));
     
     % Default options for model selection, 
     % - default StARS
