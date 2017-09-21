@@ -9,8 +9,8 @@ function output = model_average(X,varargin)
     % Get resampling iterator: 
     % options include bootstrapping, subsampling, CP intersections
     n_samples = size(X,1);
-    resampling_options = generator.create_options(n_samples);
-    resampler = generator.generate_subsamples(resampling_options);
+    resampling_options = estimate_options.resampler.options(n_samples);
+    resampler = estimate_options.resampler.run(resampling_options);
     n_resamples = resampler.options.B;
     
     % Step 1: Resampling
