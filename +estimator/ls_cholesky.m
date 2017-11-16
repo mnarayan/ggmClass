@@ -1,4 +1,4 @@
-function [T D] = ls_cholesky(X,varargin)
+function [T D fitobj] = ls_cholesky(X,nbands,varargin)
 %ESTIMATOR.LS_CHOLESKY - returns the modified cholesky factor by solving autoregression and innovation errors. 
 %     
 % where Cov(X)^{-1} = TD^{-2}T' i.e. TX = E such that TCov(X)T' = D^2
@@ -12,22 +12,22 @@ function [T D] = ls_cholesky(X,varargin)
 
     fitobj = {};
     pmin = 0;
-    pmax = 1;
+    pmax = nbands(1);
     T = eye(m); 
     D = zeros(m,m); 
 
-    % stationary AR fitting
+    % stationary AR
     [mu,phi,Sig,~,~,~] = arfit(X,pmin,pmax,'zero');
     lags = length(phi);
     for tt=1:m
-        T(tt+1:min(tt+lags,m),tt) = -phi;
+        banding_idx = tt+1:min(tt+lags,m);
+        T(banding_idx,tt) = -phi(1:length(banding_idx))';
     end
     for nn=1:n
         % Using cov(epislon) = cov(Ty);
         D = D + cov(T*X(:,1,nn));
     end
     D = diag(diag(D))/nn;
-    L = inv(T); 
     
     % % non-stationary AR fitting
     % for shiftNo=1:m
