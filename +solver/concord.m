@@ -35,8 +35,11 @@ function [Sigma Theta opts] = coordinatewise_concord(X,varargin)
     end                  
     Shat_D = reshape(diag(Shat), [p 1]); % vector p x 1
     Shat_X = Shat - diag(Shat_D); % matrix p x p
-    lambda = opts.lambda * max(max(abs(triu(Shat))));
-    
+    if(isvector(opts.lambda))
+        lambda = opts.lambda .* max(max(abs(triu(Shat))));
+    else
+        lambda = opts.lambda;
+    end
     % Initialize
     iter = 0; 
     converged = false;
@@ -61,7 +64,11 @@ function [Sigma Theta opts] = coordinatewise_concord(X,varargin)
                             Theta(pp,qq)*Shat(qq,qq);
                 symTrST(pp,qq) = symTrST(pp,qq) ./ ...
                             (Shat_D(pp) + Shat_D(qq));
-                normLambda = lambda ./ ((Shat_D(pp) + Shat_D(qq)));
+                if(isscalar(lambda))
+                    normLambda = lambda ./ ((Shat_D(pp) + Shat_D(qq)));
+                elseif(all(size(lambda)==size(Theta)))
+                    normLambda = lambda(pp,qq) ./ ((Shat_D(pp) + Shat_D(qq)));
+                end
                 Theta_X_update(pp,qq) =  ...
                         opts.shrinkage( - symTrST(pp,qq), normLambda) ./ ...
                             (Shat_D(pp) + Shat_D(qq));
@@ -132,7 +139,7 @@ function options = create_options()
                                  struct('standardize','cols')));
     options.shrinkage = @(a,kappa)(shrinkage(a,kappa));
     options.kroot = 1;
-    options.lambda = .9;
+    options.lambda = .2;
     options.max_iter = 1000; 
     options.tol = 1e-6;
     options.verbose = false;
@@ -142,15 +149,18 @@ end
 
 function y = shrinkage(a, kappa)
 	if(ismatrix(a) && ~isscalar(a))
-		a_diag = diag(a); 
-	end
+		a_diag = diag(a);
+        savediag = true;
+    else
+        savediag = false;
+    end
     y = max(0, a-kappa) - max(0, -a-kappa);
     % if(a>0)
     %     y = max(0,a - kappa);
     % elseif(a<=0)
     %     y = min(0,a + kappa);
     % end
-	if( ismatrix(a) && ismatrix(y) && ~isscalar(a))
+	if(~isscalar(y) && savediag)
         p = size(a,1); 
 		y(find(eye(p))) = a_diag; 
 	end
