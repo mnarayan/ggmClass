@@ -9,7 +9,9 @@ function [mccc Mccc varargout] =  MCCC(X,Y,varargin)
 %   V_dep = sum_i (xi-yi)'*(xi-yi)
 %   V_indep = sum_i sum_j (xi-yj)'(xi-yj)
 % 
-% USAGE: MCCC
+% USAGE: [mccc] = MCCC(X,Y);
+%        [mccc, Mccc,  mccc_ci] = MCCC(X,Y);
+%        [mccc, Mccc, mccc_ci, mccc_boot] = MCCC(X,Y);
 % 
 % INPUTS:
 % 	- X : A data matrix of n i.i.d measurements and p features
@@ -31,11 +33,27 @@ function [mccc Mccc varargout] =  MCCC(X,Y,varargin)
     covfun = @cov;
     pair_crosscov = @(X,Y)(pairwise_crosscov(X,Y));
 
-    [mccc Mccc] = matrix_ccc(X,Y,covfun,pair_crosscov); 
+    [mccc M_ccc precision accuracy normVind normVdep] = ...
+                     matrix_ccc(X,Y,covfun,pair_crosscov); 
 	
-    if nargout>=3    
-        mccc_ci = matrix_ccc_ci(X,Y,covfun,pair_crosscov);
+    Mccc = {};
+    Mccc.Mccc = M_ccc;
+    Mccc.precision = precision;
+    Mccc.accuracy = accuracy;
+    Mccc.normVind = normVind;
+    Mccc.normVdep = normVdep;
+    
+    s = RandStream('mt19937ar','Seed',1243);
+    RandStream.setGlobalStream(s);
+    currstate = rng;  
+    
+    if(nargout==3)    
+        [mccc_ci] = matrix_ccc_ci(X,Y,covfun,pair_crosscov);
         varargout{1} = mccc_ci;
+    elseif(nargout>=4)
+        [mccc_ci mccc_boot] = matrix_ccc_ci(X,Y,covfun,pair_crosscov);
+        varargout{1} = mccc_ci;
+        varargout{2} = mccc_boot;
     end
     
 end
@@ -51,27 +69,35 @@ function SigmaPair = pairwise_crosscov(X,Y)
         end
     end
     
-    SigmaPair = .5*SigmaPair/(size(X,1)*(size(Y,1)));
+    SigmaPair = .5*SigmaPair/(size(X,1)*(size(Y,1)-1));
 end
+
 
 function [mccc varargout] = matrix_ccc(X,Y,covfun,pair_crosscov)
     
-    p = size(X,2);
+    [n p] = size(X);
     verbose = false;
-    crosscov = @(X,Y)(X'*Y/(size(X,1)));
-            
+    crosscov = @(X,Y)(X'*Y/(size(X,1)-1));
+
     mu_x = mean(X,1);
     mu_y = mean(Y,1);
 
-    X = bsxfun(@minus,X,mu_x);
-    Y = bsxfun(@minus,Y,mu_y);
-    		
-	V_ind = covfun(X) + covfun(Y) - ...
-                        .5*pair_crosscov(X,Y) - ...
-                        .5*pair_crosscov(Y,X); 
-                        % + (mu_x - mu_y)*(mu_x - mu_y)'/(n*(n-1));
-    V_dep = covfun(X) + covfun(Y) - crosscov(X,Y) - crosscov(Y,X);
+    Xc = bsxfun(@minus,X,mu_x);
+    Yc = bsxfun(@minus,Y,mu_y);
     
+    mean_agreement = (mu_x - mu_y)'*(mu_x - mu_y);
+    
+	V_ind = covfun(Xc) + covfun(Yc) - ...
+                        .5*pair_crosscov(Xc,Yc) - ...
+                        .5*pair_crosscov(Yc,Xc) ...
+                        + mean_agreement;
+    V_dep = covfun(Xc) + covfun(Yc) ...
+                        - crosscov(Xc,Yc) - crosscov(Yc,Xc) ...
+                        + mean_agreement;
+    
+    %mnorm = @(A)(norm(A,'fro'));
+    mnorm = @(A)(trace(A));
+    %mnorm = @(A)(norm(A,2));
     if(nargout>=2)
         tol = 1e-5;
         [Veig Deig] = eig(V_ind);
@@ -86,24 +112,29 @@ function [mccc varargout] = matrix_ccc(X,Y,covfun,pair_crosscov)
     
         M_rho = Vsqinv * V_dep * Vsqinv;
     	M_ccc = eye(p) - M_rho;
+        precision = mnorm(V_ind - V_dep)/2; % mccc = precision*accuracy
+        accuracy = 2/mnorm(V_ind);
         varargout{1} = M_ccc;
+        varargout{2} = precision;
+        varargout{3} = accuracy;
+        varargout{4} = mnorm(V_ind);
+        varargout{5} = mnorm(V_dep);
     else
         nonneg_eig = eigs(V_ind);
         M_rho = [];
     end
     
-    %mnorm = @(A)(norm(A,'fro'));
-    mnorm = @(A)(trace(A)); 
+
     if(length(nonneg_eig)==p)
         mccc = 1 - mnorm(V_dep)/mnorm(V_ind);
-        % mccc = 1 - mnorm(M_rho)/mnorm(eye(p));
+        %mccc = 1 - mnorm(M_rho);
     else
         if(verbose)
             warning('V_ind is not postive definite');
             disp(['Low rank, df=' num2str(length(nonneg_eig))]);
         end
         mccc = 1 - mnorm(V_dep)/mnorm(V_ind);
-        % mccc = 1 - mnorm(M_rho)/mnorm(eye(p));
+        %mccc = 1 - mnorm(M_rho);
         
     end
 end
@@ -119,6 +150,37 @@ function [mccc_ci mccc_boot] = matrix_ccc_ci(X,Y,covfun,pair_crosscov)
         mccc = matrix_ccc(XX,YY,covfun,pair_crosscov);
     end
     
-    [mccc_ci mccc_boot] = bootci(50,{@bootfun,cat(2,X,Y)},'type','per');
+    function [mccc_ci] = bootcifun(Xboot,alphalevel)
+        % Xboot is a vector of bootstrapped samples
+    
+        nboot = length(Xboot);
+        bootsort = sort(Xboot);
+        low_idx = round(nboot*(alphalevel)/2) + 1;
+        hi_idx = nboot - (low_idx-1);
+        mccc_ci = nan(2,1);
+        mccc_ci(1) = bootsort(low_idx);
+        mccc_ci(2) = bootsort(hi_idx);
+        
+    end
+    
+    function [jboot] = jafterboot(bootsam)
+        
+        
+        
+    end
+    
+    function [jackci] = jacknifeci(Xjack)
+       
+        
+        
+    end
+    
+    % [mccc_ci mccc_boot] = bootci(50,{@bootfun,cat(2,X,Y)},'type','per');
+    
+    nboot = 50;
+    alphalevel = .05;
+    % bootstrap samples
+    [mccc_boot mccc_bsamp] = bootstrp(nboot,@(x)(bootfun(x)),cat(2,X,Y));    
+    mccc_ci = bootcifun(mccc_boot,alphalevel);
     
 end

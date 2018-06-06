@@ -1,9 +1,20 @@
-function W =  kendallsW(X,options)
-%kendallsW
+function W =  kendallsW(X,varargin)
+%kendallsW - returns the kendall concordance between features measured by 2 or more raters. 
 %
 % INPUTS
-% 	X  is a matrix of features x raters or features x subjects
+% 	- X  is a matrix of features x raters or features x subjects
+%
+% OUTPUTS
+%   W is the kendalls W coefficient
 	
+    switch nargin 
+    
+    case 1
+        % Do nothing
+    otherwise
+        disp('Only 1 argument supported. Use W=kendallsw(X). ')
+    end
+    
 	options.rankfun = @(x)(tiedrank(x,0)); 
 	
 	[p n] = size(X); 
