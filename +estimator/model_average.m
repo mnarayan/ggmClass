@@ -1,4 +1,7 @@
 function output = model_average(X,varargin)
+% ESTIMATOR.MODEL_AVERAGE
+% Model average estimation given a single data matrix
+% 
     
     if(nargin==1)
         estimate_options = estimator.create_options();

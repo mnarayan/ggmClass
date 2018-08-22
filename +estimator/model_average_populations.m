@@ -34,6 +34,7 @@ function output = model_average_populations(S,varargin)
     function pooledShat = group_pooled_covariance(Sn)
         pooledShat = mean(Sn,3);
     end
+    
     esimate_options.covariancefun = @group_pooled_covariance;
 
     for bb=1:n_resamples
@@ -67,7 +68,7 @@ function output = model_average_populations(S,varargin)
     refit_options.nlambdas = 1;
     refit_options.Lambda = output.stars.lambda_opt;
     output.refit_estimator = estimator.fit(S,refit_options);
-
     output.fit_options = estimate_options;
     output.resampler = resampler;
+    output.graphs = graphs;
 end
